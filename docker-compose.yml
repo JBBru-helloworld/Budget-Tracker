@@ -13,7 +13,7 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/budget_tracker
       - GOOGLE_APPLICATION_CREDENTIALS=../firebase-service-account.json
-      - GEMINI_API_KEY=AIzaSyCQBaRBRuCPfbKhYq4ouwL-a3s1EU1uhZw
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       #- STORAGE_BUCKET=${STORAGE_BUCKET}
 
   frontend:
