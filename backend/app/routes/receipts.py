@@ -15,11 +15,11 @@ security = HTTPBearer()
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
 async def upload_receipt(
     request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     receipt_image: UploadFile = File(...),
     store_name: str = Form(...),
     date: str = Form(...),  # Format: YYYY-MM-DD
-    notes: Optional[str] = Form(None),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    notes: Optional[str] = Form(None)
 ):
     """
     Upload a receipt image and process it with AI
@@ -153,8 +153,8 @@ async def get_receipt(
 @router.put("/{receipt_id}/items")
 async def update_receipt_items(
     receipt_id: str,
-    items: List[dict] = Body(...),
     request: Request,
+    items: List[dict] = Body(...),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
