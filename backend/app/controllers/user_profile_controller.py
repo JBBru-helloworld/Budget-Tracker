@@ -1,66 +1,94 @@
-from fastapi import APIRouter, Body, HTTPException, Depends, status, UploadFile, File
-from fastapi.responses import JSONResponse
-from typing import List
-
-from ..models.user_profile import UserProfileModel
-from ..services.user_profile_service import UserProfileService
-from ..middleware.auth_middleware import get_current_user
+# app/controllers/profile_controller.py
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from typing import Optional
+import os
+from app.models.user_model import UserProfile, UserProfileUpdate
+from app.services.user_service import get_user_profile, update_user_profile
+from app.controllers.auth_controller import verify_token
 
 router = APIRouter()
-user_profile_service = UserProfileService()
 
-@router.post("/", response_description="Create user profile")
-async def create_user_profile(
-    profile: UserProfileModel = Body(...),
-    current_user: dict = Depends(get_current_user)
+@router.get("/", response_model=UserProfile)
+async def get_profile(user_id: str = Depends(verify_token)):
+    """
+    Get user profile information
+    """
+    try:
+        profile = await get_user_profile(user_id["uid"])
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User profile not found"
+            )
+        
+        return profile
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching user profile: {str(e)}"
+        )
+
+@router.put("/", response_model=UserProfile)
+async def update_profile(
+    profile_update: UserProfileUpdate,
+    user_id: str = Depends(verify_token)
 ):
-    if profile.user_id != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="User ID mismatch")
-    
-    result = await user_profile_service.create_profile(profile)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=result)
+    """
+    Update user profile information
+    """
+    try:
+        updated_profile = await update_user_profile(user_id["uid"], profile_update.dict(exclude_unset=True))
+        if not updated_profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User profile not found"
+            )
+        
+        return updated_profile
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user profile: {str(e)}"
+        )
 
-@router.get("/{user_id}", response_description="Get user profile")
-async def get_user_profile(
-    user_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    if user_id != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    profile = await user_profile_service.get_profile_by_user_id(user_id)
-    if profile is None:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    return profile
-
-@router.put("/{user_id}", response_description="Update user profile")
-async def update_user_profile(
-    user_id: str,
-    profile_update: dict = Body(...),
-    current_user: dict = Depends(get_current_user)
-):
-    if user_id != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    updated_profile = await user_profile_service.update_profile(user_id, profile_update)
-    if updated_profile is None:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    return updated_profile
-
-@router.post("/{user_id}/avatar", response_description="Upload avatar")
+@router.post("/avatar", response_model=UserProfile)
 async def upload_avatar(
-    user_id: str,
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    user_id: str = Depends(verify_token)
 ):
-    if user_id != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="Access denied")
+    """
+    Upload user avatar image
+    """
+    # Validate image format
+    allowed_extensions = ["jpg", "jpeg", "png"]
+    file_ext = file.filename.split(".")[-1].lower()
     
-    # Check file type
-    if file.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
-        raise HTTPException(status_code=400, detail="Only JPEG, JPG or PNG files allowed")
+    if file_ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Avatar must be one of {', '.join(allowed_extensions)}"
+        )
     
-    avatar_url = await user_profile_service.upload_avatar(user_id, file)
-    return {"avatar_url": avatar_url}
+    try:
+        # Create avatars directory if it doesn't exist
+        os.makedirs("static/avatars", exist_ok=True)
+        
+        # Save avatar image
+        avatar_path = f"static/avatars/{user_id['uid']}.{file_ext}"
+        with open(avatar_path, "wb") as buffer:
+            buffer.write(await file.read())
+        
+        # Update user profile with avatar path
+        updated_profile = await update_user_profile(user_id["uid"], {"avatar": avatar_path})
+        if not updated_profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User profile not found"
+            )
+        
+        return updated_profile
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error uploading avatar: {str(e)}"
+        )
