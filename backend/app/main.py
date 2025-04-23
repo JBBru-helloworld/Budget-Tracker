@@ -1,62 +1,62 @@
-# backend/app/main.py
+# app/main.py
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+import firebase_admin
+from firebase_admin import credentials
 import os
 from dotenv import load_dotenv
-from .routes import auth, receipts, analytics, tips
-from .middleware.auth_middleware import auth_middleware
-from .config import settings
+from app.routes.api import api_router
+from app.database import connect_to_mongo, close_mongo_connection
 
 # Load environment variables
 load_dotenv()
 
-# Lifespan context for database connections and cleanup
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: Connect to MongoDB
-    from motor.motor_asyncio import AsyncIOMotorClient
-    app.mongodb_client = AsyncIOMotorClient(settings.MONGODB_URI)
-    app.mongodb = app.mongodb_client[settings.MONGODB_DB_NAME]
-    print("Connected to MongoDB")
-    
-    yield
-    
-    # Shutdown: Close MongoDB connection
-    app.mongodb_client.close()
-    print("MongoDB connection closed")
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate({
+    "type": "service_account",
+    "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+    "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
+    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+    "client_id": os.getenv("FIREBASE_CLIENT_ID"),
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_CERT_URL")
+})
+
+firebase_admin.initialize_app(cred)
 
 # Create FastAPI app
-app = FastAPI(lifespan=lifespan, title="Budget Tracker API", description="API for budget tracking application")
+app = FastAPI(title="BudgetTracker API", version="1.0.0")
 
-# Add CORS middleware
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],  # Update this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Add authentication middleware
-app.middleware("http")(auth_middleware)
+# Mount static files directory for avatars and other assets
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Register routers
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(receipts.router, prefix="/api/receipts", tags=["Receipts"])
-app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
-app.include_router(tips.router, prefix="/api/tips", tags=["Tips"])
+# Connect to MongoDB on startup
+@app.on_event("startup")
+async def startup_db_client():
+    await connect_to_mongo()
 
-# Global exception handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"An unexpected error occurred: {str(exc)}"}
-    )
+# Close MongoDB connection on shutdown
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    await close_mongo_connection()
 
-# Root endpoint
+# Include API routes
+app.include_router(api_router, prefix="/api")
+
+# Health check endpoint
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Budget Tracker API"}
+    return {"status": "ok", "message": "BudgetTracker API is running"}
