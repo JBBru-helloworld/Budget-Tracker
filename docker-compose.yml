@@ -14,7 +14,7 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017/budget_tracker
       - GOOGLE_APPLICATION_CREDENTIALS=../firebase-service-account.json
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      #- STORAGE_BUCKET=${STORAGE_BUCKET}
+      - STORAGE_BUCKET=${STORAGE_BUCKET}
 
   frontend:
     build: ./frontend
@@ -26,6 +26,10 @@ services:
     environment:
       - REACT_APP_API_URL=http://localhost:8000/api
       - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_HOST=0.0.0.0
+      - WDS_SOCKET_PORT=3000
+      - WDS_SOCKET_PATH=/sockjs-node
     depends_on:
       - backend
 
