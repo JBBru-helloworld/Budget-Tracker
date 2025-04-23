@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
+import apiService from "../services/apiService";
 import {
   LineChart,
   Line,
@@ -62,7 +62,7 @@ const Dashboard = () => {
     setError(null);
 
     try {
-      const response = await api.get(
+      const response = await apiService.get(
         `/analytics/dashboard?timeRange=${timeRange}`
       );
       setSpendingData(response.data.spendingOverTime);
