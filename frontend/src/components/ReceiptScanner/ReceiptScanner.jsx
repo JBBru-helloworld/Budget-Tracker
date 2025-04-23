@@ -1,7 +1,7 @@
 // src/components/ReceiptScanner/ReceiptScanner.jsx
 import { useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../services/api";
+import apiService from "../../services/apiService";
 import { Camera, Upload, Loader, AlertCircle, CheckCircle } from "lucide-react";
 import ReceiptItems from "./ReceiptItems";
 
@@ -66,7 +66,7 @@ const ReceiptScanner = () => {
       const formData = new FormData();
       formData.append("receipt", receiptImage);
 
-      const response = await api.post("/receipts/scan", formData, {
+      const response = await apiService.post("/receipts/scan", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
