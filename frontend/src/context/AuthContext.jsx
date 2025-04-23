@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from "firebase/auth";
-import { app } from "../firebase";
+import { auth } from "../firebase";
 import apiService from "../services/apiService";
 
 // Create context
@@ -17,8 +17,6 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const auth = getAuth(app);
 
   // Register function
   const register = async (email, password, displayName) => {
@@ -97,7 +95,7 @@ export function AuthProvider({ children }) {
   const resetPassword = async (email) => {
     try {
       setError(null);
-      await auth.sendPasswordResetEmail(email);
+      await sendPasswordResetEmail(auth, email);
     } catch (error) {
       setError(error.message);
       throw error;
@@ -124,7 +122,7 @@ export function AuthProvider({ children }) {
 
     // Cleanup subscription
     return unsubscribe;
-  }, [auth]);
+  }, []);
 
   // Context value
   const value = {
