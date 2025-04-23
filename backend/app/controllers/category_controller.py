@@ -1,80 +1,89 @@
-from fastapi import APIRouter, Body, HTTPException, Depends, status
-from fastapi.responses import JSONResponse
-from typing import List
-
-from ..models.category import CategoryModel
-from ..services.category_service import CategoryService
-from ..middleware.auth_middleware import get_current_user
+# app/controllers/category_controller.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from app.models.category_model import Category, CategoryCreate
+from app.services.category_service import get_all_categories, create_category, update_category, delete_category
+from app.controllers.auth_controller import verify_token
 
 router = APIRouter()
-category_service = CategoryService()
 
-@router.post("/", response_description="Create category")
-async def create_category(
-    category: CategoryModel = Body(...),
-    current_user: dict = Depends(get_current_user)
+@router.get("/", response_model=List[Category])
+async def get_categories(
+    user_id: str = Depends(verify_token),
+    system_categories: bool = True
 ):
-    if category.user_id != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="User ID mismatch")
-    
-    result = await category_service.create_category(category)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=result)
+    """
+    Get all categories (system default + user custom)
+    """
+    try:
+        categories = await get_all_categories(user_id["uid"], include_system=system_categories)
+        return categories
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching categories: {str(e)}"
+        )
 
-@router.get("/", response_description="List all categories")
-async def list_categories(
-    current_user: dict = Depends(get_current_user)
+@router.post("/", response_model=Category, status_code=status.HTTP_201_CREATED)
+async def add_category(
+    category: CategoryCreate,
+    user_id: str = Depends(verify_token)
 ):
-    categories = await category_service.get_categories_by_user_id(current_user["uid"])
-    return categories
+    """
+    Create a custom category
+    """
+    try:
+        new_category = await create_category(user_id["uid"], category.dict())
+        return new_category
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating category: {str(e)}"
+        )
 
-@router.get("/{category_id}", response_description="Get category")
-async def get_category(
+@router.put("/{category_id}", response_model=Category)
+async def modify_category(
     category_id: str,
-    current_user: dict = Depends(get_current_user)
+    category_data: dict,
+    user_id: str = Depends(verify_token)
 ):
-    category = await category_service.get_category_by_id(category_id)
-    
-    if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    if category["user_id"] != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    return category
+    """
+    Update a custom category
+    """
+    try:
+        updated_category = await update_category(category_id, user_id["uid"], category_data)
+        if not updated_category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Category not found or you don't have permission to modify it"
+            )
+        
+        return updated_category
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating category: {str(e)}"
+        )
 
-@router.put("/{category_id}", response_description="Update category")
-async def update_category(
+@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_category(
     category_id: str,
-    category_update: dict = Body(...),
-    current_user: dict = Depends(get_current_user)
+    user_id: str = Depends(verify_token)
 ):
-    category = await category_service.get_category_by_id(category_id)
-    
-    if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    if category["user_id"] != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    updated_category = await category_service.update_category(category_id, category_update)
-    return updated_category
-
-@router.delete("/{category_id}", response_description="Delete category")
-async def delete_category(
-    category_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    category = await category_service.get_category_by_id(category_id)
-    
-    if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    if category["user_id"] != current_user["uid"]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    delete_result = await category_service.delete_category(category_id)
-    
-    if delete_result:
+    """
+    Delete a custom category
+    """
+    try:
+        result = await delete_category(category_id, user_id["uid"])
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Category not found or you don't have permission to delete it"
+            )
+        
         return {"message": "Category deleted successfully"}
-    
-    raise HTTPException(status_code=400, detail="Failed to delete category")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting category: {str(e)}"
+        )
