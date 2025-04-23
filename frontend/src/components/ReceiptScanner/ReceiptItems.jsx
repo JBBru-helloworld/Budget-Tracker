@@ -1,8 +1,8 @@
 // src/components/ReceiptScanner/ReceiptItems.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../services/api";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import apiService from "../../services/apiService";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Loader, Save, Plus, Minus } from "lucide-react";
 
 const ReceiptItems = ({ items, receiptImage }) => {
@@ -37,7 +37,7 @@ const ReceiptItems = ({ items, receiptImage }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get("/categories");
+      const response = await apiService.get("/categories");
       setCategories(response.data);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
@@ -172,7 +172,7 @@ const ReceiptItems = ({ items, receiptImage }) => {
 
       formData.append("data", JSON.stringify(receiptData));
 
-      await api.post("/receipts", formData, {
+      await apiService.post("/receipts", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
