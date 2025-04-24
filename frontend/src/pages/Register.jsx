@@ -52,7 +52,7 @@ const Register = () => {
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
-            BudgetBuddy
+            Budget-Tracker
           </h1>
           <p className="mt-2 text-gray-600">Create your account</p>
         </div>
