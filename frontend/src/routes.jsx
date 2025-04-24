@@ -12,10 +12,10 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Tips from "./pages/Tips";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Layout from "./components/Layout"; // ← new import
+import Layout from "./components/Layout";
 
 function AppRoutes() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
@@ -24,6 +24,17 @@ function AppRoutes() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-gray-700">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -41,7 +52,10 @@ function AppRoutes() {
       <Route
         element={
           <ProtectedRoute>
-            <Layout />
+            <Layout
+              isSidebarOpen={isSidebarOpen}
+              setIsSidebarOpen={setIsSidebarOpen}
+            />
           </ProtectedRoute>
         }
       >
