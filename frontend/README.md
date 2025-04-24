@@ -1,70 +1,185 @@
-# Getting Started with Create React App
+# Budget Tracker
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern web application that helps users track and manage their expenses by scanning receipts, allocating costs, and analyzing spending patterns.
 
-## Available Scripts
+## 📋 Overview
 
-In the project directory, you can run:
+Budget Tracker is a comprehensive financial management tool that combines receipt scanning technology with expense tracking and budget analytics. Users can upload or scan their receipts, which are then processed using AI to extract individual items. These items can be allocated to different users for shared expenses or categorized for personal budgeting. The application provides visual analytics to help users understand their spending habits and offers personalized money-saving tips.
 
-### `npm start`
+## ✨ Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Receipt Scanning**: Upload receipt images or scan them directly with your device camera
+- **AI-Powered Text Extraction**: Automatically convert receipt images to text data
+- **Item Categorization**: Automatically categorize spending into groups (food, clothing, recreation, etc.)
+- **Cost Sharing**: Drag and drop items to allocate expenses between multiple users
+- **Visual Analytics**: Track spending with weekly, monthly, and yearly graphs
+- **Smart Insights**: Receive personalized money-saving tips based on spending patterns
+- **Secure Authentication**: Firebase authentication with email/password and password reset
+- **Responsive Design**: Fully functional on mobile, tablet, and desktop devices
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Tech Stack
 
-### `npm test`
+### Frontend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **React.js**: UI framework
+- **Tailwind CSS**: Utility-first CSS framework
+- **React Router**: Client-side routing
+- **Firebase Auth**: User authentication
+- **Context API**: State management
 
-### `npm run build`
+### Backend
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **FastAPI**: High-performance Python web framework
+- **MongoDB**: NoSQL database for storing user and receipt data
+- **Docker**: Containerization for consistent development and deployment
+- **Gemini AI**: Text extraction from receipt images and personalized tips
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Security
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Firebase Authentication**: User authentication and authorization
+- **CSRF Protection**: Cross-Site Request Forgery protection
+- **Form Validation**: Client and server-side validation
+- **Environment Variable Security**: Protection of API keys and sensitive data
 
-### `npm run eject`
+## 🚀 Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Prerequisites
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Node.js (v16+)
+- Python (v3.8+)
+- Docker and Docker Compose
+- MongoDB
+- Firebase account
+- Google Gemini API key
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Installation
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. Clone the repository:
 
-## Learn More
+   ```bash
+   git clone https://github.com/yourusername/budget-tracker.git
+   cd budget-tracker
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+2. Install frontend dependencies:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-### Code Splitting
+3. Create a `.env` file in the frontend directory:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+   ```
+   REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
+   REACT_APP_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+   REACT_APP_FIREBASE_PROJECT_ID=your_firebase_project_id
+   REACT_APP_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+   REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
+   REACT_APP_API_URL=http://localhost:8000
+   ```
 
-### Analyzing the Bundle Size
+4. Install backend dependencies:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+   ```bash
+   cd ../backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-### Making a Progressive Web App
+5. Create a `.env` file in the backend directory:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   GEMINI_API_KEY=your_gemini_api_key
+   JWT_SECRET=your_jwt_secret
+   FIREBASE_CREDENTIALS=path_to_firebase_credentials.json
+   ```
 
-### Advanced Configuration
+6. Run the application with Docker Compose:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+   ```bash
+   cd ..
+   docker-compose up
+   ```
 
-### Deployment
+7. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📐 Architecture
 
-### `npm run build` fails to minify
+The application follows the MVC (Model-View-Controller) pattern:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **Model**: MongoDB schemas for users, receipts, and items
+- **View**: React components rendering the UI
+- **Controller**: FastAPI routes handling business logic
+
+### Directory Structure
+
+```
+budget-tracker/
+├── frontend/
+│   ├── public/
+│   └── src/
+│       ├── components/
+│       ├── context/
+│       ├── pages/
+│       ├── services/
+│       ├── App.jsx
+│       ├── index.css
+│       └── routes.jsx
+├── backend/
+│   ├── app/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── main.py
+│   └── requirements.txt
+├── docker-compose.yml
+└── README.md
+```
+
+## 🔒 Security
+
+The application implements several security measures:
+
+- **Authentication**: Firebase Auth for secure user authentication
+- **Data Validation**: Input validation at both client and server levels
+- **CSRF Protection**: Prevention of cross-site request forgery attacks
+- **Secure Endpoints**: Protected API routes requiring authentication
+- **Environment Variables**: Sensitive information stored in environment variables
+- **File Type Validation**: Verification of image file types before processing
+
+## 📱 Responsive Design
+
+The application is fully responsive, providing an optimal experience across various devices:
+
+- **Mobile**: Navigation via a collapsible sidebar, touch-friendly interfaces
+- **Tablet**: Adaptive layout with flexible components
+- **Desktop**: Full-featured interface with expanded visualizations
+
+## 👥 Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgements
+
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [React](https://reactjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Firebase](https://firebase.google.com/)
+- [MongoDB](https://www.mongodb.com/)
+- [Google Gemini AI](https://ai.google.dev/)
