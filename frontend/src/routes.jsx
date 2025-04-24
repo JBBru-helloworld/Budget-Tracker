@@ -11,128 +11,52 @@ import ScanReceipt from "./pages/ScanReceipt";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Tips from "./pages/Tips";
-import Navbar from "./components/Navbar";
-import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout"; // ← new import
 
-// Routes component
 function AppRoutes() {
   const { currentUser } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Close sidebar on small screens by default
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
-    };
-
+    const handleResize = () => setIsSidebarOpen(window.innerWidth >= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {currentUser && (
-        <Navbar
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-      )}
+    <Routes>
+      {/* Public pages */}
+      <Route
+        path="/login"
+        element={currentUser ? <Navigate to="/" /> : <Login />}
+      />
+      <Route
+        path="/register"
+        element={currentUser ? <Navigate to="/" /> : <Register />}
+      />
 
-      <div className="flex">
-        {currentUser && <Sidebar isOpen={isSidebarOpen} />}
+      {/* All protected routes share the Layout */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="receipts" element={<Receipts />} />
+        <Route path="receipts/:id" element={<ReceiptDetail />} />
+        <Route path="scan" element={<ScanReceipt />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="tips" element={<Tips />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
 
-        <main
-          className={`flex-1 p-4 transition-all duration-300 ${
-            currentUser ? "pt-16" : ""
-          }`}
-        >
-          <Routes>
-            <Route
-              path="/login"
-              element={currentUser ? <Navigate to="/" /> : <Login />}
-            />
-            <Route
-              path="/register"
-              element={currentUser ? <Navigate to="/" /> : <Register />}
-            />
-
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/receipts"
-              element={
-                <ProtectedRoute>
-                  <Receipts />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/receipts/:id"
-              element={
-                <ProtectedRoute>
-                  <ReceiptDetail />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/scan"
-              element={
-                <ProtectedRoute>
-                  <ScanReceipt />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRoute>
-                  <Analytics />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/tips"
-              element={
-                <ProtectedRoute>
-                  <Tips />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </main>
-      </div>
-    </div>
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
