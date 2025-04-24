@@ -1,3 +1,4 @@
+// AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -136,11 +137,7 @@ export function AuthProvider({ children }) {
     resetPassword,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // Custom hook for using auth context
