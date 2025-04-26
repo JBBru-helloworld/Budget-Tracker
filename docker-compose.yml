@@ -1,43 +1,53 @@
 version: "3.8"
+
 services:
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-  backend:
-    build: ./backend
-    working_dir: /app
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/budget_tracker
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - STORAGE_BUCKET=${STORAGE_BUCKET}
-    depends_on:
-      - mongodb
-
   frontend:
-    build: ./frontend
-    working_dir: /app
-    command: npm run dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://backend:8000/api
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://localhost:8000/api
     depends_on:
       - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+      - ./static:/app/static
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=budget_tracker
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - FIREBASE_APP_ID=${FIREBASE_APP_ID}
+      - FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
+      - FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN}
+      - FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=budget_tracker
 
 volumes:
   mongodb_data:
