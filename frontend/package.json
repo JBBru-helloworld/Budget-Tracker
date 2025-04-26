@@ -18,15 +18,21 @@
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
     "react-router-dom": "^7.5.1",
-    "react-scripts": "5.0.1",
     "recharts": "^2.15.3",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^4.1.4",
+    "vite": "^5.4.18"
+  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "start": "npm run dev",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 3000"
   },
   "eslintConfig": {
     "extends": [
@@ -45,9 +51,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.1.4",
-    "tailwindcss": "^4.1.4"
   }
 }
