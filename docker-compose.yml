@@ -1,44 +1,43 @@
 version: "3.8"
-
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
-    depends_on:
-      - mongodb
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/budget_tracker
-      - GOOGLE_APPLICATION_CREDENTIALS=../firebase-service-account.json
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - STORAGE_BUCKET=${STORAGE_BUCKET}
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000/api
-      - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true
-      - WDS_SOCKET_HOST=0.0.0.0
-      - WDS_SOCKET_PORT=3000
-      - WDS_SOCKET_PATH=/sockjs-node
-    depends_on:
-      - backend
-
   mongodb:
     image: mongo:latest
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+
+  backend:
+    build: ./backend
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/budget_tracker
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - STORAGE_BUCKET=${STORAGE_BUCKET}
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: ./frontend
+    working_dir: /app
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://backend:8000/api
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
 
 volumes:
   mongodb_data:
