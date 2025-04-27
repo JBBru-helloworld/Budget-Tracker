@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Create a base axios instance with common configuration
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
   headers: {
     "Content-Type": "application/json",
   },
