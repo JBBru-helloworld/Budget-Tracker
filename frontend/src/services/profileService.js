@@ -1,8 +1,7 @@
 import axios from "axios";
-import { auth } from "../utils/firebase";
+import { auth } from "../firebase";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 // Helper to get auth token
 const getAuthToken = async () => {
@@ -16,7 +15,7 @@ const getAuthToken = async () => {
 export const getUserProfile = async (userId) => {
   try {
     const token = await getAuthToken();
-    const response = await axios.get(`${API_BASE_URL}/profiles/${userId}`, {
+    const response = await axios.get(`${API_URL}/profiles/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -40,7 +39,7 @@ export const getUserProfile = async (userId) => {
 
 export const createUserProfile = async (profileData) => {
   const token = await getAuthToken();
-  const response = await axios.post(`${API_BASE_URL}/profiles/`, profileData, {
+  const response = await axios.post(`${API_URL}/profiles/`, profileData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -52,7 +51,7 @@ export const createUserProfile = async (profileData) => {
 export const updateUserProfile = async (userId, profileData) => {
   const token = await getAuthToken();
   const response = await axios.put(
-    `${API_BASE_URL}/profiles/${userId}`,
+    `${API_URL}/profiles/${userId}`,
     profileData,
     {
       headers: {
@@ -71,7 +70,7 @@ export const uploadAvatar = async (userId, file) => {
   formData.append("file", file);
 
   const response = await axios.post(
-    `${API_BASE_URL}/profiles/${userId}/avatar`,
+    `${API_URL}/profiles/${userId}/avatar`,
     formData,
     {
       headers: {
