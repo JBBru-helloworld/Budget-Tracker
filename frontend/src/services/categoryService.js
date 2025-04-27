@@ -1,8 +1,7 @@
 import axios from "axios";
 import { auth } from "../utils/firebase";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 // Helper to get auth token
 const getAuthToken = async () => {
@@ -15,7 +14,7 @@ const getAuthToken = async () => {
 
 export const getCategories = async () => {
   const token = await getAuthToken();
-  const response = await axios.get(`${API_BASE_URL}/categories/`, {
+  const response = await axios.get(`${API_URL}/categories/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -25,7 +24,7 @@ export const getCategories = async () => {
 
 export const getCategoryById = async (categoryId) => {
   const token = await getAuthToken();
-  const response = await axios.get(`${API_BASE_URL}/categories/${categoryId}`, {
+  const response = await axios.get(`${API_URL}/categories/${categoryId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -35,23 +34,19 @@ export const getCategoryById = async (categoryId) => {
 
 export const createCategory = async (categoryData) => {
   const token = await getAuthToken();
-  const response = await axios.post(
-    `${API_BASE_URL}/categories/`,
-    categoryData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await axios.post(`${API_URL}/categories/`, categoryData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
   return response.data;
 };
 
 export const updateCategory = async (categoryId, categoryData) => {
   const token = await getAuthToken();
   const response = await axios.put(
-    `${API_BASE_URL}/categories/${categoryId}`,
+    `${API_URL}/categories/${categoryId}`,
     categoryData,
     {
       headers: {
@@ -65,13 +60,10 @@ export const updateCategory = async (categoryId, categoryData) => {
 
 export const deleteCategory = async (categoryId) => {
   const token = await getAuthToken();
-  const response = await axios.delete(
-    `${API_BASE_URL}/categories/${categoryId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await axios.delete(`${API_URL}/categories/${categoryId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
