@@ -19,6 +19,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Update token in localStorage and API headers
+  const updateToken = async (user) => {
+    if (user) {
+      const token = await user.getIdToken();
+      localStorage.setItem("authToken", token);
+    } else {
+      localStorage.removeItem("authToken");
+    }
+  };
+
   // Register function
   const register = async (email, password, displayName) => {
     try {
@@ -28,6 +38,9 @@ export function AuthProvider({ children }) {
         email,
         password
       );
+
+      // Update token
+      await updateToken(userCredential.user);
 
       // Create user profile in the backend
       await apiService.post("/api/auth/register", {
@@ -52,6 +65,10 @@ export function AuthProvider({ children }) {
         email,
         password
       );
+
+      // Update token
+      await updateToken(userCredential.user);
+
       return userCredential.user;
     } catch (error) {
       setError(error.message);
@@ -64,6 +81,7 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       await signOut(auth);
+      localStorage.removeItem("authToken");
     } catch (error) {
       setError(error.message);
       throw error;
@@ -103,29 +121,21 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Monitor auth state
+  // Set up auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try {
-          // Fetch additional user data from backend
-          const userData = await fetchUserData(user.uid);
-          setCurrentUser({ ...user, ...userData });
-        } catch (error) {
-          console.error("Error setting user data:", error);
-          setCurrentUser(user);
-        }
+        await updateToken(user);
+        setCurrentUser(user);
       } else {
         setCurrentUser(null);
       }
       setLoading(false);
     });
 
-    // Cleanup subscription
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
-  // Context value
   const value = {
     currentUser,
     loading,
@@ -133,11 +143,16 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    fetchUserData,
     updateProfile,
     resetPassword,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 }
 
 // Custom hook for using auth context
