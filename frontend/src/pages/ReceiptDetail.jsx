@@ -27,7 +27,7 @@ const ReceiptDetail = () => {
 
         // Fetch receipt from API
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/receipts/${id}`,
+          `${import.meta.env.VITE_API_URL}/api/receipts/${id}`,
           {
             method: "GET",
             headers: {
@@ -67,7 +67,7 @@ const ReceiptDetail = () => {
 
       // Delete receipt from API
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/receipts/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/receipts/${id}`,
         {
           method: "DELETE",
           headers: {
