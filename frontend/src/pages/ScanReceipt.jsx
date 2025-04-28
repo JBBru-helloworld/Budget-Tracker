@@ -85,7 +85,7 @@ const ScanReceipt = () => {
 
           // 2. Send to backend for AI text extraction
           const response = await fetch(
-            `${process.env.REACT_APP_API_URL}/api/receipts/scan`,
+            `${import.meta.env.VITE_API_URL}/api/receipts/scan`,
             {
               method: "POST",
               headers: {
@@ -117,7 +117,7 @@ const ScanReceipt = () => {
     try {
       // Save the receipt data to the backend
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/receipts`,
+        `${import.meta.env.VITE_API_URL}/api/receipts`,
         {
           method: "POST",
           headers: {
