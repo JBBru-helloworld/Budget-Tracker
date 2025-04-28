@@ -1,123 +1,29 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/*
-  Tailwind CSS v4 — CSS-first configuration
-  This file uses the new v4 syntax: a single @import, a CSS-first @theme block,
-  and cascade layers for base and components.
-*/
-
-/* 1. Map custom colors into Tailwind’s theme.palette via CSS-first */
-@theme {
-  /* Color palette */
-  --colors-primary: #4f46e5;
-  --colors-primary-light: #818cf8;
-  --colors-primary-dark: #3730a3;
-  --colors-secondary: #8b5cf6;
-  --colors-secondary-light: #a78bfa;
-  --colors-secondary-dark: #6d28d9;
-  --colors-accent: #06b6d4;
-  --colors-accent-light: #67e8f9;
-  --colors-accent-dark: #0e7490;
-  --colors-success: #10b981;
-  --colors-warning: #f59e0b;
-  --colors-danger: #ef4444;
-  --colors-neutral-50: #fafafa;
-  --colors-neutral-100: #f5f5f5;
-  --colors-neutral-200: #e5e5e5;
-  --colors-neutral-300: #d4d4d4;
-  --colors-neutral-400: #a3a3a3;
-  --colors-neutral-500: #737373;
-  --colors-neutral-600: #525252;
-  --colors-neutral-700: #404040;
-  --colors-neutral-800: #262626;
-  --colors-neutral-900: #171717;
-  --colors-neutral-950: #0a0a0a;
-}
-
-/* 2. Base layer: CSS variables and foundational styles */
-@layer base {
-  :root {
-    /* Retain CSS variables for direct use in custom rules */
-    --primary: var(--colors-primary);
-    --primary-light: var(--colors-primary-light);
-    --primary-dark: var(--colors-primary-dark);
-    --secondary: var(--colors-secondary);
-    --secondary-light: var(--colors-secondary-light);
-    --secondary-dark: var(--colors-secondary-dark);
-    --accent: var(--colors-accent);
-    --accent-light: var(--colors-accent-light);
-    --accent-dark: var(--colors-accent-dark);
-    --success: var(--colors-success);
-    --warning: var(--colors-warning);
-    --danger: var(--colors-danger);
-    /* neutral variables available too */
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply font-sans text-neutral-800 bg-neutral-50;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Typography */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-bold leading-tight;
-  }
-  h1 {
-    @apply text-4xl md:text-5xl;
-  }
-  h2 {
-    @apply text-3xl md:text-4xl;
-  }
-  h3 {
-    @apply text-2xl md:text-3xl;
-  }
-  h4 {
-    @apply text-xl md:text-2xl;
-  }
-  h5 {
-    @apply text-lg md:text-xl;
-  }
-  h6 {
-    @apply text-base md:text-lg;
-  }
-
-  a {
-    @apply text-primary transition-colors duration-200;
-  }
-  a:hover {
-    @apply text-primary-dark;
-  }
-}
-
-/* 3. Components layer: custom @apply-based classes */
+/* Custom styles */
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
+
   .btn-primary {
     @apply btn bg-primary text-white hover:bg-primary-dark focus:ring-primary;
   }
+
   .btn-secondary {
     @apply btn bg-secondary text-white hover:bg-secondary-dark focus:ring-secondary;
   }
+
   .btn-accent {
     @apply btn bg-accent text-white hover:bg-accent-dark focus:ring-accent;
   }
+
   .btn-outline {
     @apply btn bg-transparent border border-current text-primary hover:bg-primary hover:text-white focus:ring-primary;
   }
+
   .btn-ghost {
     @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100 focus:ring-neutral-500;
   }
@@ -125,9 +31,11 @@
   .card {
     @apply bg-white rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg;
   }
+
   .form-input {
     @apply w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200;
   }
+
   .form-label {
     @apply block text-sm font-medium text-neutral-700 mb-1;
   }
@@ -135,78 +43,94 @@
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
+
   .badge-primary {
     @apply badge bg-primary-light text-primary-dark;
   }
+
   .badge-secondary {
     @apply badge bg-secondary-light text-secondary-dark;
   }
+
   .badge-success {
     @apply badge bg-green-100 text-green-800;
   }
+
   .badge-warning {
     @apply badge bg-yellow-100 text-yellow-800;
   }
+
   .badge-danger {
     @apply badge bg-red-100 text-red-800;
   }
 
+  /* Container for the receipt items that can be dragged */
   .receipt-item {
     @apply p-3 mb-2 bg-white rounded-lg border border-neutral-200 shadow-sm transition-all duration-200 cursor-grab hover:shadow-md;
   }
+
   .receipt-item.dragging {
     @apply shadow-lg border-primary-light bg-blue-50;
   }
 
+  /* Drop zones for allocating costs to different people */
   .drop-zone {
     @apply p-4 border-2 border-dashed rounded-lg transition-all duration-200 min-h-[120px];
   }
+
   .drop-zone-active {
     @apply border-primary bg-blue-50;
   }
 
+  /* Charts and graphs styling */
   .chart-container {
     @apply p-4 bg-white rounded-xl shadow-md;
   }
+
+  /* Tips and tricks cards */
   .tip-card {
     @apply p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl shadow-sm border border-purple-100;
   }
 
+  /* Category tags */
   .category-tag {
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2;
   }
+
   .category-food {
     @apply category-tag bg-green-100 text-green-800;
   }
+
   .category-clothing {
     @apply category-tag bg-blue-100 text-blue-800;
   }
+
   .category-recreation {
     @apply category-tag bg-purple-100 text-purple-800;
   }
+
   .category-transport {
     @apply category-tag bg-yellow-100 text-yellow-800;
   }
+
   .category-bills {
     @apply category-tag bg-red-100 text-red-800;
   }
+
   .category-misc {
     @apply category-tag bg-gray-100 text-gray-800;
   }
-
-  /* Firebase auth customization */
-  .firebase-auth-container {
-    @apply w-full max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg;
-  }
 }
 
-/* 4. Animations & keyframes (outside layers) */
+/* Animation classes */
 .fade-in {
   animation: fadeIn 0.5s ease-in;
 }
+
 .slide-in {
   animation: slideIn 0.5s ease-out;
 }
+
 .bounce {
   animation: bounce 0.5s ease-in-out;
 }
@@ -219,6 +143,7 @@
     opacity: 1;
   }
 }
+
 @keyframes slideIn {
   from {
     transform: translateY(20px);
@@ -229,6 +154,7 @@
     opacity: 1;
   }
 }
+
 @keyframes bounce {
   0%,
   100% {
@@ -239,11 +165,16 @@
   }
 }
 
-/* 5. Responsive & utility layers */
+/* Responsive adjustments */
 @media (max-width: 640px) {
   .container {
     @apply px-4;
   }
+}
+
+/* Firebase auth customization */
+.firebase-auth-container {
+  @apply w-full max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg;
 }
 
 /* Custom scrollbar */
@@ -251,28 +182,34 @@
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--neutral-100);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--neutral-300);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--neutral-400);
 }
 
-/* Print styles */
+/* Print styles for receipts */
 @media print {
   .no-print {
     display: none;
   }
+
   .print-only {
     display: block;
   }
+
   body {
     background: white;
   }
+
   .container {
     max-width: 100%;
     padding: 0;
