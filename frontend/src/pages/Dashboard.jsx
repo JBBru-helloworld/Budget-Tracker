@@ -8,216 +8,184 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
 } from "@heroicons/react/outline";
+import axios from "axios";
+
+const API_URL = "http://127.0.0.1:8000/api";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [budget, setBudget] = useState(0);
+  const [spent, setSpent] = useState(0);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    totalSpent: 0,
-    totalReceipts: 0,
-    recentTransactions: [],
-    spendingByCategory: [],
-  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+
       try {
         // Get the auth token
         const token = await currentUser.getIdToken();
 
         // Fetch dashboard data from API
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/dashboard`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await axios.get(`${API_URL}/dashboard`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
-        }
-
-        const data = await response.json();
-        setDashboardData(data);
-        setLoading(false);
+        const { transactions, budget, total_spent } = response.data;
+        setTransactions(transactions);
+        setBudget(budget);
+        setSpent(total_spent);
+        setError(null);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-        // Load some fallback data in case of error
-        setDashboardData({
-          totalSpent: 0,
-          totalReceipts: 0,
-          recentTransactions: [],
-          spendingByCategory: [],
-        });
+        setError("Failed to load dashboard data");
+      } finally {
         setLoading(false);
       }
     };
 
-    if (currentUser) {
-      fetchDashboardData();
-    }
+    fetchDashboardData();
   }, [currentUser]);
+
+  const handleSetBudget = async (newBudget) => {
+    if (!currentUser) return;
+
+    try {
+      const token = await currentUser.getIdToken();
+      await axios.post(
+        `${API_URL}/budget`,
+        { amount: parseFloat(newBudget) },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setBudget(parseFloat(newBudget));
+      setError(null);
+    } catch (error) {
+      console.error("Error setting budget:", error);
+      setError("Failed to update budget");
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">
-        Welcome back, {currentUser.displayName || "User"}!
-      </h1>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-500 mr-4">
-              <CurrencyDollarIcon className="h-8 w-8" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Spent (This Month)</p>
-              <p className="text-2xl font-semibold">
-                ${dashboardData.totalSpent.toFixed(2)}
-              </p>
-            </div>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
         </div>
+      )}
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-purple-100 text-purple-500 mr-4">
-              <TrendingUpIcon className="h-8 w-8" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Highest Spending Category</p>
-              <p className="text-2xl font-semibold">
-                {dashboardData.spendingByCategory[0]?.name || "N/A"}
-              </p>
-            </div>
-          </div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="text-sm text-gray-600">
+          Welcome, {currentUser?.displayName || currentUser?.email}
         </div>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-500 mr-4">
-              <TrendingDownIcon className="h-8 w-8" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Receipts Processed</p>
-              <p className="text-2xl font-semibold">
-                {dashboardData.totalReceipts}
-              </p>
-            </div>
-          </div>
+          <h2 className="text-xl font-semibold mb-2">Monthly Budget</h2>
+          <p className="text-3xl font-bold text-blue-600">
+            ${budget.toFixed(2)}
+          </p>
+          <button
+            onClick={() => handleSetBudget(prompt("Enter new budget amount:"))}
+            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+          >
+            Update Budget
+          </button>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Total Spent</h2>
+          <p className="text-3xl font-bold text-red-600">${spent.toFixed(2)}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Remaining</h2>
+          <p className="text-3xl font-bold text-green-600">
+            ${(budget - spent).toFixed(2)}
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Transactions */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Recent Transactions</h2>
-            <Link
-              to="/receipts"
-              className="text-blue-500 hover:text-blue-700 text-sm"
-            >
-              View All
-            </Link>
-          </div>
-          <div className="p-4">
-            {dashboardData.recentTransactions.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
-                {dashboardData.recentTransactions.map((transaction) => (
-                  <li key={transaction.id} className="py-3">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-medium">{transaction.store}</p>
-                        <p className="text-sm text-gray-500">
-                          {transaction.date}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          ${transaction.amount.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {transaction.category}
-                        </p>
-                      </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
+          {transactions.length > 0 ? (
+            <div className="space-y-4">
+              {transactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5)
+                .map((transaction) => (
+                  <div
+                    key={transaction._id}
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-medium">{transaction.description}</p>
+                      <p className="text-sm text-gray-500">
+                        {transaction.category} •{" "}
+                        {new Date(transaction.date).toLocaleDateString()}
+                      </p>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                No recent transactions
-              </p>
-            )}
-          </div>
-          <div className="p-4 bg-gray-50">
-            <Link
-              to="/scan"
-              className="flex items-center justify-center w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              <PlusCircleIcon className="h-5 w-5 mr-2" />
-              Add New Receipt
-            </Link>
-          </div>
-        </div>
-
-        {/* Spending by Category */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-semibold">Spending by Category</h2>
-          </div>
-          <div className="p-4">
-            {dashboardData.spendingByCategory.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.spendingByCategory.map((category) => (
-                  <div key={category.name} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        {category.name}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ${category.amount.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className={`${category.color} h-2.5 rounded-full`}
-                        style={{
-                          width: `${
-                            (category.amount / dashboardData.totalSpent) * 100
-                          }%`,
-                        }}
-                      ></div>
-                    </div>
+                    <p
+                      className={`font-semibold ${
+                        transaction.amount > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      ${Math.abs(transaction.amount).toFixed(2)}
+                    </p>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                No spending data available
-              </p>
-            )}
-          </div>
-          <div className="p-4 bg-gray-50">
-            <Link
-              to="/analytics"
-              className="flex items-center justify-center w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              View Detailed Analytics
-            </Link>
+            </div>
+          ) : (
+            <p className="text-gray-500">No recent transactions</p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <button className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              <span className="block text-blue-600 font-medium">
+                Add Transaction
+              </span>
+            </button>
+            <button className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+              <span className="block text-green-600 font-medium">
+                Set Budget
+              </span>
+            </button>
+            <button className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+              <span className="block text-purple-600 font-medium">
+                View Reports
+              </span>
+            </button>
+            <button className="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+              <span className="block text-orange-600 font-medium">
+                Manage Categories
+              </span>
+            </button>
           </div>
         </div>
       </div>
