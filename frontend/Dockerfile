@@ -1,5 +1,5 @@
 # frontend/Dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -15,5 +15,8 @@ COPY . .
 # Expose port
 EXPOSE 3000
 
-# Use the same command as in your docker-compose.yml (npm run dev)
-CMD ["npm", "run", "dev"]
+# Set environment variables for development
+ENV VITE_API_URL=http://localhost:8000/api
+
+# Start the development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
