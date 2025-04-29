@@ -4,7 +4,7 @@ from app.controllers import (
     auth_controller,
     category_controller,
     receipt_controller,
-    profile_controller,
+    user_profile_controller,
     analytics_controller,
     tips_controller,
     settings_controller,
@@ -22,7 +22,7 @@ api_router.include_router(
 )
 
 api_router.include_router(
-    profile_controller.router,
+    user_profile_controller.router,
     prefix="/profile",
     tags=["User Profile"]
 )
