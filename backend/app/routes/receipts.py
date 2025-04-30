@@ -2,12 +2,15 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..models.models import Receipt, ReceiptItem, Category
-from ..services.ai_service import process_receipt_image
+from ..services.ai_service import process_receipt_image, extract_text_from_image, categorize_items
 from ..services.storage_service import upload_image
 from datetime import datetime
 import uuid
 from typing import List, Optional
 from bson import ObjectId
+import tempfile
+import os
+import aiohttp
 
 router = APIRouter()
 security = HTTPBearer()
@@ -238,4 +241,58 @@ async def delete_receipt(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting receipt: {str(e)}"
+        )
+
+@router.post("/scan")
+async def scan_receipt(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    imageUrl: str = Body(...)
+):
+    """
+    Scan a receipt image using Gemini AI
+    """
+    try:
+        user_id = request.state.user_id
+        
+        # Download image from URL
+        async with aiohttp.ClientSession() as session:
+            async with session.get(imageUrl) as response:
+                if response.status != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Failed to download image"
+                    )
+                
+                # Create temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                    temp_file.write(await response.read())
+                    temp_path = temp_file.name
+        
+        try:
+            # Extract text from image
+            extracted_text = await extract_text_from_image(temp_path)
+            
+            # Categorize items
+            items = await categorize_items(extracted_text)
+            
+            # Process receipt data
+            receipt_data = {
+                "raw_text": extracted_text,
+                "items": [item.dict() for item in items],
+                "total_amount": sum(item.price for item in items),
+                "store_name": "Unknown Store",  # Will be updated by user
+                "date": datetime.now().isoformat()
+            }
+            
+            return receipt_data
+            
+        finally:
+            # Clean up temporary file
+            os.unlink(temp_path)
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error scanning receipt: {str(e)}"
         )
