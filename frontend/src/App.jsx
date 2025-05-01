@@ -6,7 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Categories from "./pages/Categories";
 import Receipts from "./pages/Receipts";
@@ -36,7 +36,7 @@ function App() {
             <Route path="receipts/:id" element={<ReceiptDetail />} />
           </Route>
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </AuthProvider>
     </Router>
