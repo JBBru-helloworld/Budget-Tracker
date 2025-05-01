@@ -1,4 +1,4 @@
-// backend/firebaseAdmin.js or wherever you configure Firebase
+// backend/firebaseAdmin.js
 const admin = require("firebase-admin");
 require("dotenv").config(); // loads .env
 
