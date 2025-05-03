@@ -1,442 +1,279 @@
-// frontend/src/pages/ScanReceipt.jsx
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  CameraIcon,
-  UploadIcon,
-  DocumentTextIcon,
-} from "@heroicons/react/outline";
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
 import { useAuth } from "../context/AuthContext";
-import { app } from "../firebase";
+import { format } from "date-fns";
+import axios from "axios";
+import { Camera, Upload, Loader, AlertCircle, CheckCircle } from "lucide-react";
 
 const ScanReceipt = () => {
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [scanning, setScanning] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [scannedData, setScannedData] = useState(null);
-  const [error, setError] = useState("");
-  const [step, setStep] = useState(1); // 1: Upload, 2: Review, 3: Assign
-  const fileInputRef = useRef(null);
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const storage = getStorage(app);
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [scanResult, setScanResult] = useState(null);
+  const [error, setError] = useState("");
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      // Check file type
-      if (
-        !["image/jpeg", "image/jpg", "image/png"].includes(selectedFile.type)
-      ) {
-        setError("Please select a valid image file (JPG, JPEG, or PNG)");
-        return;
-      }
+    const file = e.target.files[0];
+    if (!file) return;
 
-      setFile(selectedFile);
-      setError("");
-
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(selectedFile);
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreviewImage(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleScanReceipt = async () => {
-    if (!file) {
-      setError("Please select an image to scan");
-      return;
-    }
+  const handleScan = async () => {
+    if (!previewImage) return;
 
-    setScanning(true);
+    setIsLoading(true);
     setError("");
 
     try {
-      // 1. Upload file to Firebase Storage
-      const storageRef = ref(
-        storage,
-        `receipts/${currentUser.uid}/${Date.now()}-${file.name}`
-      );
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          setError("Upload failed: " + error.message);
-          setScanning(false);
-        },
-        async () => {
-          // Upload complete, get download URL
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-          // 2. Send to backend for AI text extraction
-          const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/receipts/scan`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${await currentUser.getIdToken()}`,
-              },
-              body: JSON.stringify({ imageUrl: downloadURL }),
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to scan receipt");
-          }
-
-          const data = await response.json();
-          setScannedData(data);
-          setStep(2); // Move to review step
-          setScanning(false);
-        }
-      );
-    } catch (error) {
-      console.error("Error scanning receipt:", error);
-      setError("Failed to scan receipt: " + error.message);
-      setScanning(false);
-    }
-  };
-
-  const handleSaveReceipt = async () => {
-    try {
-      // Save the receipt data to the backend
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/receipts`,
+      const token = await currentUser.getIdToken();
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/receipts/scan`,
+        { image_data: previewImage },
         {
-          method: "POST",
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-            Authorization: `Bearer ${await currentUser.getIdToken()}`,
           },
-          body: JSON.stringify({
-            ...scannedData,
-            imageUrl: scannedData.imageUrl,
-            items: scannedData.items.map((item) => ({
-              ...item,
-              assignedTo: item.assignedTo || "self",
-            })),
-          }),
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to save receipt");
-      }
-
-      const savedReceipt = await response.json();
-
-      // Navigate to the receipt detail page
-      navigate(`/receipts/${savedReceipt.id}`);
-    } catch (error) {
-      console.error("Error saving receipt:", error);
-      setError("Failed to save receipt: " + error.message);
+      setScanResult(response.data);
+    } catch (err) {
+      console.error("Error scanning receipt:", err);
+      setError(err.response?.data?.message || "Failed to scan receipt");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const assignItemTo = (itemIndex, person) => {
-    setScannedData((prevData) => {
-      const updatedItems = [...prevData.items];
-      updatedItems[itemIndex] = {
-        ...updatedItems[itemIndex],
-        assignedTo: person,
+  const handleSave = async () => {
+    if (!scanResult) return;
+
+    setIsLoading(true);
+    try {
+      const token = await currentUser.getIdToken();
+
+      // Format the data according to your Receipt model
+      const receiptData = {
+        store_name: scanResult.store_name,
+        date: scanResult.date,
+        total_amount: parseFloat(scanResult.total_amount),
+        items: scanResult.items.map((item) => ({
+          name: item.name,
+          price: parseFloat(item.price),
+          quantity: item.quantity || 1,
+          category: item.category || "Uncategorized",
+        })),
+        image_url: previewImage,
+        is_shared: false,
       };
 
-      return {
-        ...prevData,
-        items: updatedItems,
-      };
-    });
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/receipts`,
+        receiptData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      navigate("/receipts");
+    } catch (err) {
+      console.error("Error saving receipt:", err);
+      setError(err.response?.data?.message || "Failed to save receipt");
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">Scan Receipt</h1>
+    <div className="container mx-auto px-4 py-6 fade-in">
+      <h2 className="text-2xl font-bold text-neutral-800 mb-6">Scan Receipt</h2>
 
       {error && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-          role="alert"
-        >
-          <span className="block sm:inline">{error}</span>
+        <div className="badge-danger p-3 rounded-md mb-4 flex items-center">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          {error}
         </div>
       )}
 
-      {step === 1 && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div
-            className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500 mb-4"
-            onClick={() => fileInputRef.current.click()}
-          >
-            {previewUrl ? (
-              <div className="w-full flex justify-center">
-                <img
-                  src={previewUrl}
-                  alt="Receipt preview"
-                  className="max-w-full max-h-64 rounded"
+      <div className="mb-6">
+        {!previewImage ? (
+          <div className="card p-6 slide-in">
+            <div className="drop-zone border-neutral-300 bg-neutral-50 text-center">
+              <div className="flex flex-col items-center space-y-4 py-8">
+                <Upload className="h-12 w-12 text-neutral-400" />
+                <p className="text-neutral-500">
+                  Upload a receipt image to scan
+                </p>
+                <button
+                  onClick={() => fileInputRef.current.click()}
+                  className="btn-primary"
+                >
+                  Select Image
+                </button>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
                 />
               </div>
-            ) : (
-              <>
-                <UploadIcon className="h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-500 text-center">
-                  Click to upload or drag and drop
-                  <br />
-                  <span className="text-sm">JPG, JPEG, or PNG</span>
-                </p>
-              </>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/jpeg,image/jpg,image/png"
-              className="hidden"
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              onClick={handleScanReceipt}
-              disabled={!file || scanning}
-              className={`flex items-center justify-center px-4 py-2 rounded-md text-white font-medium 
-                ${
-                  !file || scanning
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                }`}
-            >
-              {scanning ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                  Scanning ({Math.round(uploadProgress)}%)
-                </>
-              ) : (
-                <>
-                  <CameraIcon className="h-5 w-5 mr-2" />
-                  Scan Receipt
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && scannedData && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-medium mb-4">Review Scanned Items</h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">
-                Receipt Image
-              </h3>
-              <div className="border rounded overflow-hidden">
-                <img src={previewUrl} alt="Receipt" className="w-full" />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">
-                Receipt Details
-              </h3>
-              <div className="border rounded p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-gray-500">Store</label>
-                    <input
-                      type="text"
-                      value={scannedData.store}
-                      onChange={(e) =>
-                        setScannedData({
-                          ...scannedData,
-                          store: e.target.value,
-                        })
-                      }
-                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500">Date</label>
-                    <input
-                      type="date"
-                      value={scannedData.date}
-                      onChange={(e) =>
-                        setScannedData({ ...scannedData, date: e.target.value })
-                      }
-                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500">Category</label>
-                    <select
-                      value={scannedData.category}
-                      onChange={(e) =>
-                        setScannedData({
-                          ...scannedData,
-                          category: e.target.value,
-                        })
-                      }
-                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                    >
-                      <option value="Food">Food</option>
-                      <option value="Transportation">Transportation</option>
-                      <option value="Clothing">Clothing</option>
-                      <option value="Entertainment">Entertainment</option>
-                      <option value="Utilities">Utilities</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500">Total</label>
-                    <input
-                      type="number"
-                      value={scannedData.total}
-                      onChange={(e) =>
-                        setScannedData({
-                          ...scannedData,
-                          total: parseFloat(e.target.value),
-                        })
-                      }
-                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-
-          <h3 className="text-md font-medium mb-2">Items</h3>
-          <div className="border rounded overflow-hidden mb-6">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Item
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Quantity
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Price
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Assigned To
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {scannedData.items.map((item, index) => (
-                  <tr key={index}>
-                    <td className="px-3 py-2 text-sm">
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => {
-                          const updatedItems = [...scannedData.items];
-                          updatedItems[index].name = e.target.value;
-                          setScannedData({
-                            ...scannedData,
-                            items: updatedItems,
-                          });
-                        }}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-sm">
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const updatedItems = [...scannedData.items];
-                          updatedItems[index].quantity = parseInt(
-                            e.target.value
-                          );
-                          setScannedData({
-                            ...scannedData,
-                            items: updatedItems,
-                          });
-                        }}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                        min="1"
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-sm">
-                      <input
-                        type="number"
-                        value={item.price}
-                        onChange={(e) => {
-                          const updatedItems = [...scannedData.items];
-                          updatedItems[index].price = parseFloat(
-                            e.target.value
-                          );
-                          setScannedData({
-                            ...scannedData,
-                            items: updatedItems,
-                          });
-                        }}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                        step="0.01"
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-sm">
-                      <select
-                        value={item.assignedTo || "self"}
-                        onChange={(e) => assignItemTo(index, e.target.value)}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+        ) : (
+          <div className="card p-6 slide-in">
+            <div className="flex flex-col items-center">
+              <img
+                src={previewImage}
+                alt="Receipt preview"
+                className="max-h-96 object-contain rounded-lg mb-4"
+              />
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleScan}
+                  disabled={isLoading}
+                  className={isLoading ? "btn-ghost" : "btn-primary"}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader className="w-5 h-5 mr-2 animate-spin" />
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
-                        <option value="self">Me</option>
-                        <option value="roommate">Roommate</option>
-                        <option value="partner">Partner</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
+                      </svg>
+                      Scan Receipt
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setPreviewImage(null);
+                    setScanResult(null);
+                  }}
+                  className="btn-outline"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {scanResult && (
+        <div className="card p-6 slide-in">
+          <h3 className="text-xl font-semibold mb-4">Scan Results</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <p className="form-label">Store</p>
+              <p className="text-lg">{scanResult.store_name}</p>
+            </div>
+
+            <div>
+              <p className="form-label">Date</p>
+              <p className="text-lg">
+                {scanResult.date
+                  ? format(new Date(scanResult.date), "MMM dd, yyyy")
+                  : "Not detected"}
+              </p>
+            </div>
+
+            <div>
+              <p className="form-label">Total</p>
+              <p className="text-lg font-semibold">
+                ${parseFloat(scanResult.total_amount).toFixed(2)}
+              </p>
+            </div>
           </div>
 
-          <div className="flex justify-between">
+          <div className="mb-6">
+            <h4 className="text-lg font-medium mb-2">Items</h4>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-neutral-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                      Item
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                      Qty
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {scanResult.items &&
+                    scanResult.items.map((item, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0 ? "bg-white" : "bg-neutral-50"
+                        }
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                          {item.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900">
+                          ${parseFloat(item.price).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900">
+                          {item.quantity || 1}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span
+                            className={`category-${
+                              item.category?.toLowerCase() || "misc"
+                            }`}
+                          >
+                            {item.category || "Miscellaneous"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
             <button
-              onClick={() => setStep(1)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+              onClick={handleSave}
+              disabled={isLoading}
+              className={isLoading ? "btn-ghost" : "btn-accent"}
             >
-              Back
-            </button>
-            <button
-              onClick={handleSaveReceipt}
-              className="px-4 py-2 rounded-md text-white font-medium bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              Save Receipt
+              <CheckCircle className="w-5 h-5 mr-2" />
+              {isLoading ? "Saving..." : "Save Receipt"}
             </button>
           </div>
         </div>
