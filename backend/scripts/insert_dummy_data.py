@@ -2,15 +2,42 @@ from datetime import datetime, timedelta
 import random
 from pymongo import MongoClient
 from bson import ObjectId
+import firebase_admin
+from firebase_admin import credentials, auth
+
+# Initialize Firebase Admin SDK with your service account
+cred = credentials.Certificate('budget-tracker-bbdf7-firebase-adminsdk-fbsvc-146f301fb9.json')
+firebase_admin.initialize_app(cred)
 
 # Connect to MongoDB
 client = MongoClient("mongodb://localhost:27017")
 db = client["budget_tracker"]
 
-# Dummy user ID (replace with your actual user ID from Firebase)
-USER_ID = "dummy_user_123"
+# Get or create user profile
+EMAIL = "jb.brubusiness3@gmail.com"
 
-# Categories
+# Try to get Firebase user
+try:
+    firebase_user = auth.get_user_by_email(EMAIL)
+    USER_ID = firebase_user.uid
+except:
+    print(f"User with email {EMAIL} not found in Firebase")
+    exit(1)
+
+# Check if user profile exists in MongoDB
+user_profile = db.user_profiles.find_one({"email": EMAIL})
+if not user_profile:
+    user_profile = {
+        "user_id": USER_ID,
+        "email": EMAIL,
+        "display_name": "Joshua",
+        "created_at": datetime.now(),
+        "updated_at": datetime.now(),
+        "budget_targets": {}
+    }
+    db.user_profiles.insert_one(user_profile)
+
+# Categories with modern UI colors and icons
 categories = [
     {"name": "Groceries", "color": "#10B981", "icon": "shopping-cart"},
     {"name": "Dining Out", "color": "#F59E0B", "icon": "utensils"},
@@ -45,7 +72,8 @@ category_ids = [str(cat["_id"]) for cat in db.categories.find({"user_id": USER_I
 db.receipts.delete_many({"user_id": USER_ID})
 receipts = []
 
-for i in range(50):  # Generate 50 receipts
+# Generate receipts for the last 90 days
+for i in range(50):
     date = datetime.now() - timedelta(days=random.randint(0, 90))
     store = random.choice(stores)
     total_amount = round(random.uniform(10, 200), 2)
@@ -77,10 +105,10 @@ for i in range(50):  # Generate 50 receipts
         "total_amount": total_amount,
         "store_name": store,
         "items": items,
-        "image_url": f"https://example.com/receipts/{i}.jpg",
+        "image_url": None,  # No dummy images
         "created_at": date,
         "updated_at": date,
-        "is_shared": random.choice([True, False]),
+        "is_shared": False,
         "shared_expenses": []
     }
     
@@ -88,6 +116,29 @@ for i in range(50):  # Generate 50 receipts
 
 db.receipts.insert_many(receipts)
 
+# Set budget targets
+budget_targets = {
+    "Groceries": 500,
+    "Dining Out": 300,
+    "Transportation": 200,
+    "Entertainment": 150,
+    "Utilities": 250,
+    "Shopping": 300,
+    "Health": 200,
+    "Education": 100
+}
+
+# Update user profile with budget targets
+db.user_profiles.update_one(
+    {"user_id": USER_ID},
+    {"$set": {
+        "budget_targets": budget_targets,
+        "updated_at": datetime.now()
+    }}
+)
+
 print("Dummy data inserted successfully!")
+print(f"- User profile created/updated for {EMAIL}")
 print(f"- {len(categories)} categories created")
-print(f"- {len(receipts)} receipts created") 
+print(f"- {len(receipts)} receipts created")
+print(f"- Budget targets set for {len(budget_targets)} categories")
