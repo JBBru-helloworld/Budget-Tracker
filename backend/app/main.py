@@ -7,6 +7,7 @@ from firebase_admin import credentials
 from app.config.settings import settings
 from app.routes.api import api_router
 from app.utils.db import get_database
+from app.routes import receipts
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate({
@@ -38,7 +39,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include API routes
-app.include_router(api_router, prefix="/api")
+app.include_router(receipts.router, prefix="/api")
 
 # Health check endpoint
 @app.get("/")
