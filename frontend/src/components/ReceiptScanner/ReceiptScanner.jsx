@@ -13,6 +13,7 @@ const ReceiptScanner = () => {
   const [error, setError] = useState(null);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [receiptItems, setReceiptItems] = useState([]);
+  const [receiptData, setReceiptData] = useState(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -53,7 +54,7 @@ const ReceiptScanner = () => {
   };
 
   const scanReceipt = async () => {
-    if (!receiptImage) {
+    if (!imagePreview) {
       setError("Please upload a receipt image first");
       return;
     }
@@ -63,16 +64,26 @@ const ReceiptScanner = () => {
     setScanSuccess(false);
 
     try {
-      const formData = new FormData();
-      formData.append("receipt", receiptImage);
+      // Convert the image to base64 string - but we already have it in imagePreview
+      // Just need to send the base64 string to the backend
+      const token = await user.getIdToken();
 
-      const response = await apiService.post("/receipts/scan", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await apiService.post(
+        "/receipts/scan",
+        { image_data: imagePreview },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      setReceiptItems(response.data.items);
+      // Store the complete receipt data
+      setReceiptData(response.data);
+
+      // Extract items for display
+      setReceiptItems(response.data.items || []);
       setScanSuccess(true);
     } catch (err) {
       console.error("Receipt scanning failed:", err);
@@ -85,10 +96,60 @@ const ReceiptScanner = () => {
     }
   };
 
+  const saveReceipt = async () => {
+    if (!receiptData) {
+      setError("No receipt data to save");
+      return;
+    }
+
+    setIsScanning(true);
+    setError(null);
+
+    try {
+      const token = await user.getIdToken();
+
+      // Create receipt data from scan results
+      const receipt = {
+        store_name: receiptData.store_name || "Unknown Store",
+        date: receiptData.date || new Date().toISOString(),
+        total_amount: parseFloat(receiptData.total_amount) || 0,
+        items: receiptData.items.map((item) => ({
+          name: item.name,
+          price: parseFloat(item.price),
+          quantity: parseFloat(item.quantity || 1),
+          category: item.category || "Uncategorized",
+        })),
+        image_url: imagePreview,
+        is_shared: false,
+        shared_expenses: [],
+      };
+
+      await apiService.post("/receipts", receipt, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setScanSuccess(true);
+
+      // Optional: redirect to receipts list or show success message
+    } catch (err) {
+      console.error("Saving receipt failed:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to save receipt. Please try again."
+      );
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
   const resetScanner = () => {
     setReceiptImage(null);
     setImagePreview(null);
     setReceiptItems([]);
+    setReceiptData(null);
     setScanSuccess(false);
     setError(null);
   };
@@ -177,7 +238,7 @@ const ReceiptScanner = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-center">
+            <div className="flex justify-center space-x-4">
               <button
                 onClick={scanReceipt}
                 disabled={isScanning}
@@ -210,6 +271,21 @@ const ReceiptScanner = () => {
                   </>
                 )}
               </button>
+
+              {receiptData && (
+                <button
+                  onClick={saveReceipt}
+                  disabled={isScanning}
+                  className={`px-6 py-2 ${
+                    isScanning
+                      ? "bg-gray-400"
+                      : "bg-green-600 hover:bg-green-700"
+                  } text-white rounded-md transition flex items-center`}
+                >
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Save Receipt
+                </button>
+              )}
             </div>
 
             {/* Error message */}
@@ -233,7 +309,19 @@ const ReceiptScanner = () => {
 
       {/* Receipt Items */}
       {receiptItems.length > 0 && (
-        <ReceiptItems items={receiptItems} receiptImage={receiptImage} />
+        <ReceiptItems
+          items={receiptItems}
+          receiptImage={receiptImage}
+          storeInfo={
+            receiptData
+              ? {
+                  store_name: receiptData.store_name || "Unknown Store",
+                  date: receiptData.date || new Date().toISOString(),
+                  total_amount: receiptData.total_amount || 0,
+                }
+              : null
+          }
+        />
       )}
     </div>
   );
