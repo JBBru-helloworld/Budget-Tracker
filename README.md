@@ -1,19 +1,19 @@
 # Budget Tracker
 
-A modern web application that helps users track and manage their expenses by scanning receipts, allocating costs, and analyzing spending patterns.
+A modern web application that helps users track and manage their expenses by scanning receipts, allocating costs, and analysing spending patterns.
 
 ## 📋 Overview
 
-Budget Tracker is a comprehensive financial management tool that combines receipt scanning technology with expense tracking and budget analytics. Users can upload or scan their receipts, which are then processed using AI to extract individual items. These items can be allocated to different users for shared expenses or categorized for personal budgeting. The application provides visual analytics to help users understand their spending habits and offers personalized money-saving tips.
+Budget Tracker is a comprehensive financial management tool that combines receipt scanning technology with expense tracking and budget analytics. Users can upload or scan their receipts, which are then processed using AI to extract individual items. These items can be allocated to different users for shared expenses or categorised for personal budgeting. The application provides visual analytics to help users understand their spending habits and offers personalised money-saving tips.
 
 ## ✨ Features
 
 - **Receipt Scanning**: Upload receipt images or scan them directly with your device camera
 - **AI-Powered Text Extraction**: Automatically convert receipt images to text data
-- **Item Categorization**: Automatically categorize spending into groups (food, clothing, recreation, etc.)
+- **Item Categorisation**: Automatically categorise spending into groups (food, clothing, recreation, etc.)
 - **Cost Sharing**: Drag and drop items to allocate expenses between multiple users
 - **Visual Analytics**: Track spending with weekly, monthly, and yearly graphs
-- **Smart Insights**: Receive personalized money-saving tips based on spending patterns
+- **Smart Insights**: Receive personalised money-saving tips based on spending patterns
 - **Secure Authentication**: Firebase authentication with email/password and password reset
 - **Responsive Design**: Fully functional on mobile, tablet, and desktop devices
 
@@ -31,12 +31,12 @@ Budget Tracker is a comprehensive financial management tool that combines receip
 
 - **FastAPI**: High-performance Python web framework
 - **MongoDB**: NoSQL database for storing user and receipt data
-- **Docker**: Containerization for consistent development and deployment
-- **Gemini AI**: Text extraction from receipt images and personalized tips
+- **Docker**: Containerisation for consistent development and deployment
+- **Gemini AI**: Text extraction from receipt images and personalised tips
 
 ### Security
 
-- **Firebase Authentication**: User authentication and authorization
+- **Firebase Authentication**: User authentication and authorisation
 - **CSRF Protection**: Cross-Site Request Forgery protection
 - **Form Validation**: Client and server-side validation
 - **Environment Variable Security**: Protection of API keys and sensitive data
@@ -112,11 +112,17 @@ Budget Tracker is a comprehensive financial management tool that combines receip
 
 ## 📐 Architecture
 
-The application follows the MVC (Model-View-Controller) pattern:
+The application follows the Client/Server pattern:
 
-- **Model**: MongoDB schemas for users, receipts, and items
-- **View**: React components rendering the UI
-- **Controller**: FastAPI routes handling business logic
+- **Client (Frontend)**: The frontend, built with React.js, serves as the user interface layer. It manages user interactions and communicates with the backend via RESTful API calls to retrieve and send data. State management is handled using the Context API, ensuring a consistent and responsive user experience.
+
+- **Server (Backend)**: The backend, developed with FastAPI, acts as the application server. It processes client requests, executes business logic, and interfaces with the database. The server exposes secure API endpoints for the client to interact with.
+
+- **Database**: MongoDB functions as the database layer, storing user information, receipt data, and categorised expenses. The backend employs MongoDB schemas to enforce data structure and integrity.
+
+- **Communication**: The client and server communicate over HTTP using JSON as the data format. Authentication and authorisation are implemented using Firebase Auth tokens, ensuring secure access to API endpoints and user resources.
+
+- **AI Integration**: The backend integrates with Google Gemini AI to perform receipt text extraction and generate personalised insights. This integration enhances the application's functionality by providing advanced data processing capabilities.
 
 ### Directory Structure
 
@@ -161,7 +167,7 @@ The application is fully responsive, providing an optimal experience across vari
 
 - **Mobile**: Navigation via a collapsible sidebar, touch-friendly interfaces
 - **Tablet**: Adaptive layout with flexible components
-- **Desktop**: Full-featured interface with expanded visualizations
+- **Desktop**: Full-featured interface with expanded visualisations
 
 ## 👥 Contributing
 
