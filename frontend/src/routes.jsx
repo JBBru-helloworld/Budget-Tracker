@@ -12,6 +12,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Tips from "./pages/Tips";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Notifications from "./pages/Notifications";
 import Layout from "./components/Layout";
 
 function AppRoutes() {
@@ -66,6 +67,7 @@ function AppRoutes() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="tips" element={<Tips />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
 
       {/* Catch-all */}
