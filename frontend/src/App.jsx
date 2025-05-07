@@ -12,6 +12,7 @@ import Categories from "./pages/Categories";
 import Receipts from "./pages/Receipts";
 import ScanReceipt from "./pages/ScanReceipt";
 import ReceiptDetail from "./pages/ReceiptDetail";
+import { NotificationProvider } from "./context/NotificationContext";
 import "./index.css";
 
 // Main App component
@@ -19,25 +20,27 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="receipts" element={<Receipts />} />
-            <Route path="receipts/scan" element={<ScanReceipt />} />
-            <Route path="receipts/:id" element={<ReceiptDetail />} />
-          </Route>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+        <NotificationProvider>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="receipts" element={<Receipts />} />
+              <Route path="receipts/scan" element={<ScanReceipt />} />
+              <Route path="receipts/:id" element={<ReceiptDetail />} />
+            </Route>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Routes>
+        </NotificationProvider>
       </AuthProvider>
     </Router>
   );
