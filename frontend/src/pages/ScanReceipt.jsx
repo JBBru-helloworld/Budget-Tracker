@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { format } from "date-fns";
 import axios from "axios";
 import { Camera, Upload, Loader, AlertCircle, CheckCircle } from "lucide-react";
 
@@ -199,7 +198,11 @@ const ScanReceipt = () => {
               <p className="form-label">Date</p>
               <p className="text-lg">
                 {scanResult.date
-                  ? format(new Date(scanResult.date), "MMM dd, yyyy")
+                  ? new Date(scanResult.date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "2-digit",
+                      year: "numeric",
+                    })
                   : "Not detected"}
               </p>
             </div>
