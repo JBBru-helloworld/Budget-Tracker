@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext";
 import {
   HomeIcon,
   ReceiptRefundIcon,
@@ -16,6 +17,7 @@ import {
 const Layout = () => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -115,10 +117,17 @@ const Layout = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative">
+              <Link
+                to="/notifications"
+                className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative"
+              >
                 <BellIcon className="h-6 w-6" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-              </button>
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Link>
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
