@@ -5,7 +5,6 @@ from . import user_profile_controller
 from . import analytics_controller
 from . import tips_controller
 from . import settings_controller
-from . import scan_controller
 
 __all__ = [
     'auth_controller',
@@ -14,6 +13,5 @@ __all__ = [
     'user_profile_controller',
     'analytics_controller',
     'tips_controller',
-    'settings_controller',
-    'scan_controller'
+    'settings_controller'
 ] 
