@@ -1,7 +1,7 @@
 from datetime import datetime
 from bson import ObjectId
 from typing import List, Optional
-from ..utils.db import get_database
+from app.config.mongodb import get_database
 
 class CategoryService:
     def __init__(self):
