@@ -1,6 +1,6 @@
 # app/services/user_service.py
 from datetime import datetime
-from app.database import get_database
+from app.config.mongodb import get_database
 from bson import ObjectId
 
 async def create_user_profile(user_data):
