@@ -6,7 +6,7 @@ import firebase_admin
 from firebase_admin import credentials
 from app.config.settings import settings
 from app.routes.api import api_router
-from app.utils.db import get_database
+from app.config.mongodb import connect_to_mongo, close_mongo_connection
 from app.routes import receipts
 from app.routes import notifications
 
@@ -42,6 +42,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Include API routes
 app.include_router(receipts.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
+
+# Add database connection event handlers
+app.add_event_handler("startup", connect_to_mongo)
+app.add_event_handler("shutdown", close_mongo_connection)
 
 # Health check endpoint
 @app.get("/")
