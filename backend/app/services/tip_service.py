@@ -4,7 +4,7 @@ from typing import List, Optional
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
-from app.database import get_database
+from app.config.mongodb import get_database
 from app.models.tip_model import TipCreate, TipInDB, TipResponse
 from bson import ObjectId
 
