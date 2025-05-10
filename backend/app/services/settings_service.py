@@ -1,6 +1,6 @@
 # app/services/settings_service.py
 from datetime import datetime
-from app.database import get_database
+from app.config.mongodb import get_database
 
 async def get_user_settings(user_id):
     """Get user settings."""
