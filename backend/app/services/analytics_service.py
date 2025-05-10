@@ -1,7 +1,7 @@
 # app/services/analytics_service.py
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
-from app.database import get_database
+from app.config.mongodb import get_database
 from app.models.receipt_model import ReceiptItem
 import statistics
 from collections import defaultdict
