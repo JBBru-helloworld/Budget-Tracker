@@ -1,6 +1,6 @@
 # app/services/receipt_service.py
 from datetime import datetime
-from app.database import get_database
+from app.config.mongodb import get_database
 from bson import ObjectId
 from typing import List, Dict
 from app.models.receipt_model import Receipt, ReceiptItem, SharedExpense
