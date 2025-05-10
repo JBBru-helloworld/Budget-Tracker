@@ -3,7 +3,7 @@ import os
 import google.generativeai as genai
 from datetime import datetime
 from bson import ObjectId
-from ..database import get_database
+from app.config.mongodb import get_database
 
 # Configure Gemini API
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
