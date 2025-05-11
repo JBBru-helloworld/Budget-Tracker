@@ -6,7 +6,7 @@ from ..services.notification_service import (
     mark_all_notifications_read,
     get_notification_count
 )
-from ..models.notification_model import NotificationResponse
+from ..models.notifications_model import NotificationResponse
 from ..services.firebase_service import verify_firebase_token
 
 router = APIRouter(
