@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from typing import List, Dict, Optional
 from app.models.receipt_model import ReceiptItem
 from datetime import datetime, timedelta
-from app.database import get_database
+from app.config.mongodb import get_database
 
 # Load environment variables
 load_dotenv()
