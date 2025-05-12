@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 import os
 from dotenv import load_dotenv
@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
-    # MongoDB
-    MONGODB_URI: str = "mongodb://localhost:27017"
-    MONGODB_DB_NAME: str = "budget_tracker"
+    # MongoDB - Fix naming to match what your app expects
+    MONGODB_URI: str = "mongodb://localhost:27017"  # Changed from MONGODB_URI 
+    MONGODB_DB_NAME: str = "budget_tracker"         # Changed from MONGODB_DB_NAME
     
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
@@ -33,8 +33,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000"
     ]
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # Update to new Pydantic v2 format
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False  # Make environment variable names case-insensitive
+    )
 
-settings = Settings() 
+settings = Settings()
