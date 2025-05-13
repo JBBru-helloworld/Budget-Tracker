@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from app.models.category_model import Category, CategoryCreate
-from app.database import get_database
-from app.middleware.auth import get_current_user
+from app.config.mongodb import get_database
+from app.middleware.auth_middleware import get_current_user
 from bson import ObjectId
 
 router = APIRouter()
