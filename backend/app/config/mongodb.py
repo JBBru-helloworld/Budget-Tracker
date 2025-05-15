@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# MongoDB connection details - FIX THE NAMING!
+# MongoDB connection details
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "budget_tracker")  # Changed from DB_NAME
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "budget_tracker")
 
 # MongoDB client
 client = None
@@ -19,7 +19,7 @@ async def connect_to_mongo():
     """Connect to MongoDB."""
     global client, db
     client = AsyncIOMotorClient(MONGODB_URI)
-    db = client[MONGODB_DB_NAME]  # Also changed here
+    db = client[MONGODB_DB_NAME]  
     print(f"Connected to MongoDB: {MONGODB_URI}/{MONGODB_DB_NAME}")
 
 async def close_mongo_connection():
