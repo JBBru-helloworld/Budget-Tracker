@@ -8,8 +8,8 @@ load_dotenv()
 
 class Settings(BaseSettings):
     # MongoDB - Fix naming to match what your app expects
-    MONGODB_URI: str = "mongodb://localhost:27017"  # Changed from MONGODB_URI 
-    MONGODB_DB_NAME: str = "budget_tracker"         # Changed from MONGODB_DB_NAME
+    MONGODB_URI: str = "mongodb://localhost:27017"  
+    MONGODB_DB_NAME: str = "budget_tracker"         # Default database name
     
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
