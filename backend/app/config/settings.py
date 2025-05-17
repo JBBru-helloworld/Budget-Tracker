@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
-    # MongoDB - Fix naming to match what your app expects
+    # MongoDB
     MONGODB_URI: str = "mongodb://localhost:27017"  
     MONGODB_DB_NAME: str = "budget_tracker"         # Default database name
     
