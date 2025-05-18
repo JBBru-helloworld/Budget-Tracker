@@ -9,7 +9,7 @@ load_dotenv()
 class Settings(BaseSettings):
     # MongoDB
     MONGODB_URI: str = "mongodb://localhost:27017"  
-    MONGODB_DB_NAME: str = "budget_tracker"         # Default database name
+    MONGODB_DB_NAME: str = "budget_tracker"
     
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
