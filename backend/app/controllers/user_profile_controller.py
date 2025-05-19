@@ -10,9 +10,8 @@ router = APIRouter()
 
 @router.get("/", response_model=UserProfile)
 async def get_profile(user_id: str = Depends(verify_token)):
-    """
-    Get user profile information
-    """
+
+    # Get user profile information
     try:
         profile = await get_user_profile(user_id["uid"])
         if not profile:
@@ -33,9 +32,8 @@ async def update_profile(
     profile_update: UserProfileUpdate,
     user_id: str = Depends(verify_token)
 ):
-    """
-    Update user profile information
-    """
+
+    # Update user profile information
     try:
         updated_profile = await update_user_profile(user_id["uid"], profile_update.dict(exclude_unset=True))
         if not updated_profile:
