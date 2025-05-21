@@ -54,9 +54,9 @@ async def upload_avatar(
     file: UploadFile = File(...),
     user_id: str = Depends(verify_token)
 ):
-    """
-    Upload user avatar image
-    """
+
+    # Upload user avatar image
+    
     # Validate image format
     allowed_extensions = ["jpg", "jpeg", "png"]
     file_ext = file.filename.split(".")[-1].lower()
