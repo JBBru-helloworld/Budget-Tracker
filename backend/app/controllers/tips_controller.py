@@ -14,9 +14,8 @@ async def get_tips(
     personalized: bool = False,
     limit: int = 5
 ):
-    """
-    Get money-saving tips, either general or personalized based on spending patterns
-    """
+
+    # Get money-saving tips, either general or personalized based on spending patterns
     try:
         if personalized:
             # Get personalized tips based on user's spending patterns
