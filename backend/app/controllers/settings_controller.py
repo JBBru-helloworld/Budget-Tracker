@@ -9,9 +9,8 @@ router = APIRouter()
 
 @router.get("/", response_model=UserSettings)
 async def get_settings(user_id: str = Depends(verify_token)):
-    """
-    Get user settings
-    """
+
+    # Get user settings
     try:
         settings = await get_user_settings(user_id["uid"])
         if not settings:
@@ -41,9 +40,8 @@ async def update_settings(
     settings_update: dict,
     user_id: str = Depends(verify_token)
 ):
-    """
-    Update user settings
-    """
+
+    # Update user settings
     try:
         updated_settings = await update_user_settings(user_id["uid"], settings_update)
         if not updated_settings:
@@ -64,9 +62,8 @@ async def update_notification_settings(
     notification_settings: NotificationSettings,
     user_id: str = Depends(verify_token)
 ):
-    """
-    Update notification settings
-    """
+
+    # Update notification settings
     try:
         current_settings = await get_user_settings(user_id["uid"])
         if not current_settings:
