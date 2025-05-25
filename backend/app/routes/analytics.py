@@ -16,9 +16,8 @@ async def get_spending_summary(
     start_date: Optional[str] = None,  # Format: YYYY-MM-DD
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """
-    Get spending summary for a specified period
-    """
+
+    # Get spending summary for a specified period
     try:
         user_id = request.state.user_id
         
@@ -92,9 +91,8 @@ async def get_spending_trends(
     limit: int = Query(12, ge=1, le=52),  # Number of periods to return
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """
-    Get spending trends over time for charts
-    """
+
+    # Get spending trends over time for charts
     try:
         user_id = request.state.user_id
         
@@ -175,9 +173,8 @@ async def get_budget_comparison(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """
-    Compare current month's spending with budget targets
-    """
+
+    # Compare current month's spending with budget targets
     try:
         user_id = request.state.user_id
         
