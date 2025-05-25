@@ -17,9 +17,8 @@ async def get_spending_analytics(
     end_date: Optional[str] = None,
     category: Optional[str] = None
 ):
-    """
-    Get spending analytics for the specified time period
-    """
+
+    # Get spending analytics for the specified time period
     # Set default date range based on time_period if not explicitly provided
     if not start_date or not end_date:
         today = datetime.now()
@@ -76,9 +75,8 @@ async def get_category_breakdown(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
-    """
-    Get spending breakdown by category
-    """
+
+    # Get spending breakdown by category
     # Default to current month if dates not provided
     if not start_date or not end_date:
         today = datetime.now()
