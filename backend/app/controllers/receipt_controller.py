@@ -152,9 +152,8 @@ async def update_receipt_items(
 
 @router.delete("/{receipt_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_receipt(receipt_id: str, user_id: str = Depends(verify_token)):
-    """
-    Delete a receipt
-    """
+
+    # Delete a receipt
     try:
         result = await delete_receipt(ObjectId(receipt_id), user_id["uid"])
         if not result:
