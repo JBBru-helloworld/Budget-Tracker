@@ -18,9 +18,8 @@ async def upload_receipt(
     date: str = Form(...),
     user_id: str = Depends(verify_token)
 ):
-    """
-    Upload a receipt image, extract items using AI, and save to database
-    """
+
+    # Upload a receipt image, extract items using AI, and save to database
     # Validate image format
     allowed_extensions = ["jpg", "jpeg", "png"]
     file_ext = file.filename.split(".")[-1].lower()
@@ -78,9 +77,8 @@ async def upload_receipt(
 
 @router.get("/{receipt_id}", response_model=ReceiptResponse)
 async def get_receipt_detail(receipt_id: str, user_id: str = Depends(verify_token)):
-    """
-    Get detailed information about a specific receipt
-    """
+
+    # Get detailed information about a specific receipt
     try:
         receipt = await get_receipt(ObjectId(receipt_id), user_id["uid"])
         if not receipt:
@@ -105,9 +103,8 @@ async def list_receipts(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
-    """
-    Get all receipts for the authenticated user with optional filtering
-    """
+
+    # Get all receipts for the authenticated user with optional filtering
     date_filters = {}
     
     if start_date:
@@ -136,9 +133,8 @@ async def update_receipt_items(
     updates: dict,
     user_id: str = Depends(verify_token)
 ):
-    """
-    Update receipt details or shared status
-    """
+
+    # Update receipt details or shared status
     try:
         updated_receipt = await update_receipt(ObjectId(receipt_id), user_id["uid"], updates)
         if not updated_receipt:
