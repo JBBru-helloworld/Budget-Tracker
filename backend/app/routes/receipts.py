@@ -18,7 +18,7 @@ async def scan_receipt(
     image_data: str = Body(..., embed=True),
     firebase_uid: str = Depends(verify_firebase_token)
 ):
-    """Process a receipt image using OCR"""
+    # Process a receipt image using OCR
     try:
         # Process the image with Gemini OCR
         receipt_data = await process_receipt_image(image_data)
@@ -44,7 +44,7 @@ async def create_receipt(
     receipt: ReceiptCreate,
     firebase_uid: str = Depends(verify_firebase_token)
 ):
-    """Create a new receipt in the database"""
+    # Create a new receipt in the database
     try:
         db = get_database()
         
