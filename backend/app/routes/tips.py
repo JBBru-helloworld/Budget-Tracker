@@ -16,9 +16,8 @@ async def get_saving_tips(
     limit: int = 5,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """
-    Get personalized money-saving tips
-    """
+
+    # Get personalized money-saving tips
     try:
         user_id = request.state.user_id
         
@@ -118,9 +117,8 @@ async def create_custom_tip(
     tip: dict,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """
-    Create a custom money-saving tip
-    """
+
+    # Create a custom money-saving tip
     try:
         user_id = request.state.user_id
         
