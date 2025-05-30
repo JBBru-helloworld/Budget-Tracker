@@ -21,7 +21,7 @@ ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/jpg'}
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 
 async def validate_image(image_path: str) -> bool:
-    """Validate image type and size."""
+    # Validate image type and size.
     try:
         # Check file size
         if os.path.getsize(image_path) > MAX_IMAGE_SIZE:
@@ -37,7 +37,7 @@ async def validate_image(image_path: str) -> bool:
         return False
 
 async def extract_text_from_image(image_path: str) -> str:
-    """Extract text from receipt image using Gemini AI."""
+    # Extract text from receipt image using Gemini AI.
     if not await validate_image(image_path):
         raise ValueError("Invalid image format or size")
     
@@ -62,7 +62,7 @@ async def extract_text_from_image(image_path: str) -> str:
         raise Exception(f"Error extracting text from image: {str(e)}")
 
 async def categorize_items(items_text: str) -> List[ReceiptItem]:
-    """Parse and categorize receipt items using Gemini AI."""
+    # Parse and categorize receipt items using Gemini AI.
     try:
         # Extract items from the text
         item_pattern = r"- (.*?): \$([\d.]+)(?: \(quantity: (\d+)\))?"
@@ -118,7 +118,7 @@ async def categorize_items(items_text: str) -> List[ReceiptItem]:
         raise Exception(f"Error categorizing items: {str(e)}")
 
 async def generate_saving_tips(user_id: str) -> List[Dict]:
-    """Generate personalized saving tips based on user's spending patterns."""
+    # Generate personalized saving tips based on user's spending patterns.
     try:
         db = await get_database()
         
@@ -179,7 +179,7 @@ async def generate_saving_tips(user_id: str) -> List[Dict]:
         raise Exception(f"Error generating saving tips: {str(e)}")
 
 async def track_tip_effectiveness(user_id: str, tip_id: str, implemented: bool, savings: float):
-    """Track the effectiveness of implemented tips."""
+    # Track the effectiveness of implemented tips.
     try:
         db = await get_database()
         await db.tip_effectiveness.insert_one({
