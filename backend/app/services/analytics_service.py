@@ -7,7 +7,7 @@ import statistics
 from collections import defaultdict
 
 async def get_spending_summary(user_id: str, start_date: datetime, end_date: datetime, category: Optional[str] = None):
-    """Get comprehensive spending summary for a specific date range."""
+    # Get comprehensive spending summary for a specific date range.
     db = await get_database()
     
     # Build pipeline for aggregation
@@ -104,7 +104,7 @@ async def get_spending_summary(user_id: str, start_date: datetime, end_date: dat
     }
 
 async def _generate_spending_insights(items: List[Dict], category_totals: Dict[str, float]) -> Dict:
-    """Generate insights about spending patterns."""
+    # Generate insights about spending patterns.
     insights = {
         "top_categories": [],
         "spending_trends": [],
@@ -153,7 +153,7 @@ async def _generate_spending_insights(items: List[Dict], category_totals: Dict[s
     return insights
 
 async def _generate_spending_predictions(spending_data: List[Dict]) -> Dict:
-    """Generate spending predictions based on historical data."""
+    # Generate spending predictions based on historical data.
     predictions = {
         "next_week": None,
         "next_month": None,
@@ -192,7 +192,7 @@ async def _generate_spending_predictions(spending_data: List[Dict]) -> Dict:
     return predictions
 
 async def get_category_breakdown(user_id: str, start_date: datetime, end_date: datetime) -> Dict:
-    """Get detailed breakdown of spending by category."""
+    # Get detailed breakdown of spending by category.
     db = await get_database()
     
     pipeline = [
