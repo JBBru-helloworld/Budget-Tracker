@@ -6,7 +6,7 @@ from typing import List, Dict
 from app.models.receipt_model import Receipt, ReceiptItem, SharedExpense
 
 async def save_receipt(receipt_data: dict):
-    """Save a new receipt to the database."""
+    # Save a new receipt to the database.
     db = await get_database()
     receipt_data["created_at"] = datetime.now()
     receipt_data["updated_at"] = datetime.now()
@@ -20,7 +20,7 @@ async def save_receipt(receipt_data: dict):
     return str(result.inserted_id)
 
 async def _calculate_shared_expenses(items: List[ReceiptItem]) -> List[SharedExpense]:
-    """Calculate shared expenses based on item assignments."""
+    # Calculate shared expenses based on item assignments.
     shared_expenses: Dict[str, SharedExpense] = {}
     
     for item in items:
@@ -37,7 +37,7 @@ async def _calculate_shared_expenses(items: List[ReceiptItem]) -> List[SharedExp
     return list(shared_expenses.values())
 
 async def assign_items_to_user(receipt_id: str, user_id: str, item_ids: List[str], target_user_id: str):
-    """Assign items to a specific user."""
+    # Assign items to a specific user.
     db = await get_database()
     
     # Get the receipt
@@ -68,7 +68,7 @@ async def assign_items_to_user(receipt_id: str, user_id: str, item_ids: List[str
     return await get_receipt(receipt_id, user_id)
 
 async def get_receipt(receipt_id: str, user_id: str):
-    """Get a specific receipt by ID."""
+    # Get a specific receipt by ID.
     db = await get_database()
     receipt = await db.receipts.find_one({
         "_id": ObjectId(receipt_id),
@@ -86,7 +86,7 @@ async def get_receipt(receipt_id: str, user_id: str):
     return None
 
 async def get_user_receipts(user_id: str, skip: int = 0, limit: int = 20, category: str = None, date_filters: dict = None):
-    """Get all receipts for a user with optional filtering."""
+    # Get all receipts for a user with optional filtering.
     db = await get_database()
     
     # Build query
@@ -120,7 +120,7 @@ async def get_user_receipts(user_id: str, skip: int = 0, limit: int = 20, catego
     return receipts
 
 async def update_receipt(receipt_id: str, user_id: str, updates: dict):
-    """Update a receipt."""
+    # Update a receipt.
     db = await get_database()
     updates["updated_at"] = datetime.now()
     
@@ -144,7 +144,7 @@ async def update_receipt(receipt_id: str, user_id: str, updates: dict):
     return None
 
 async def delete_receipt(receipt_id: str, user_id: str):
-    """Delete a receipt."""
+    # Delete a receipt.
     db = await get_database()
     result = await db.receipts.delete_one({
         "_id": ObjectId(receipt_id),
