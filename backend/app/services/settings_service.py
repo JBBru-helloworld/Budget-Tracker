@@ -3,7 +3,7 @@ from datetime import datetime
 from app.config.mongodb import get_database
 
 async def get_user_settings(user_id):
-    """Get user settings."""
+    # Get user settings.
     db = get_database()
     settings = await db.user_settings.find_one({"user_id": user_id})
     
@@ -14,7 +14,7 @@ async def get_user_settings(user_id):
     return None
 
 async def update_user_settings(user_id, settings_data):
-    """Update user settings."""
+    # Update user settings.
     db = get_database()
     settings_data["updated_at"] = datetime.now()
     
