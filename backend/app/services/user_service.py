@@ -4,7 +4,7 @@ from app.config.mongodb import get_database
 from bson import ObjectId
 
 async def create_user_profile(user_data):
-    """Create a new user profile in MongoDB."""
+    # Create a new user profile in MongoDB.
     db = get_database()
     user_data["created_at"] = datetime.now()
     user_data["updated_at"] = datetime.now()
@@ -18,7 +18,7 @@ async def create_user_profile(user_data):
     return user_profile
 
 async def get_user_profile(firebase_uid):
-    """Get user profile by Firebase UID."""
+    # Get user profile by Firebase UID.
     db = get_database()
     user_profile = await db.user_profiles.find_one({"firebase_uid": firebase_uid})
     
@@ -29,7 +29,7 @@ async def get_user_profile(firebase_uid):
     return None
 
 async def update_user_profile(firebase_uid, update_data):
-    """Update user profile."""
+    # Update user profile.
     db = get_database()
     update_data["updated_at"] = datetime.now()
     
