@@ -5,7 +5,7 @@ from ..config import settings
 import os
 
 def initialize_firebase():
-    """Initialize Firebase Admin SDK as a singleton"""
+    # Initialize Firebase Admin SDK as a singleton
     if not firebase_admin._apps:
         # Use service account file if available, otherwise use environment variables
         if os.path.exists(settings.FIREBASE_SERVICE_ACCOUNT_PATH):
