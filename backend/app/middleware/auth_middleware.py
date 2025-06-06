@@ -13,9 +13,9 @@ PUBLIC_ROUTES = [
 ]
 
 async def auth_middleware(request: Request, call_next):
-    """
-    Middleware to handle authentication for protected routes
-    """
+
+    # Middleware to handle authentication for protected routes
+
     # Check if the route is public
     path = request.url.path
     if any(re.match(pattern, path) for pattern in PUBLIC_ROUTES):
