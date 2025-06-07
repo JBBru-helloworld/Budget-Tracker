@@ -12,7 +12,7 @@ def test_mongodb_connection():
     #     pytest.fail(f"Failed to connect to MongoDB: {str(e)}")
 
 def test_user_crud():
-    """Test User CRUD operations"""
+    """# Test User CRUD operations"""
     # Test user creation
     user_id = User.create_user(
         username="testuser",
