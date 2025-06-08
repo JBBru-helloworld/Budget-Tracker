@@ -13,7 +13,7 @@ class User:
 
     @staticmethod
     def create_user(username, email, password_hash):
-        """Create a new user"""
+        # Create a new user
         user_data = {
             'username': username,
             'email': email,
@@ -25,7 +25,7 @@ class User:
 
     @staticmethod
     def get_user_by_id(user_id):
-        """Get user by ID"""
+        # Get user by ID
         try:
             user = users_collection.find_one({'_id': ObjectId(user_id)})
             return user
@@ -34,7 +34,7 @@ class User:
 
     @staticmethod
     def get_user_by_email(email):
-        """Get user by email"""
+        # Get user by email
         return users_collection.find_one({'email': email})
 
     @staticmethod
