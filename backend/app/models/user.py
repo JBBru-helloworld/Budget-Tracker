@@ -39,7 +39,7 @@ class User:
 
     @staticmethod
     def update_user(user_id, update_data):
-        """Update user information"""
+        # Update user information
         try:
             result = users_collection.update_one(
                 {'_id': ObjectId(user_id)},
@@ -51,7 +51,7 @@ class User:
 
     @staticmethod
     def delete_user(user_id):
-        """Delete user"""
+        # Delete user
         try:
             result = users_collection.delete_one({'_id': ObjectId(user_id)})
             return result.deleted_count > 0
