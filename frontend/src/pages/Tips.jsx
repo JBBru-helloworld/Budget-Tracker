@@ -1,4 +1,3 @@
-/* tips.jsx */
 import React, { useState, useEffect } from "react";
 import apiService from "../services/apiService";
 import { useAuth } from "../context/AuthContext";
