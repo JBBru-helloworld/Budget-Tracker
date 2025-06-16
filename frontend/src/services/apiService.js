@@ -1,4 +1,3 @@
-// frontend/src/services/apiService.js
 import axios from "axios";
 
 // Create a base axios instance with common configuration
