@@ -1,4 +1,3 @@
-// src/components/SavingTips/SavingTips.jsx
 import { useState, useEffect } from "react";
 import api from "../../services/apiService";
 import {
