@@ -1,4 +1,3 @@
-// src/components/ReceiptScanner/ReceiptScanner.jsx
 import { useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import apiService from "../../services/apiService";
