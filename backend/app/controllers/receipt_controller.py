@@ -7,7 +7,7 @@ from bson import ObjectId
 from app.models.receipt_model import ReceiptCreate, ReceiptResponse, ReceiptItem
 from app.services.receipt_service import save_receipt, get_receipt, get_user_receipts, delete_receipt, update_receipt
 from app.services.ai_service import extract_text_from_image, categorize_items
-from app.controllers.auth_controller import verify_token
+from app.middleware.auth_middleware import get_current_user
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ async def upload_receipt(
     file: UploadFile = File(...),
     store_name: str = Form(...),
     date: str = Form(...),
-    user_id: str = Depends(verify_token)
+    user_id: dict = Depends(get_current_user)
 ):
 
     # Upload a receipt image, extract items using AI, and save to database
@@ -76,7 +76,7 @@ async def upload_receipt(
             os.remove(file_path)
 
 @router.get("/{receipt_id}", response_model=ReceiptResponse)
-async def get_receipt_detail(receipt_id: str, user_id: str = Depends(verify_token)):
+async def get_receipt_detail(receipt_id: str, user_id: dict = Depends(get_current_user)):
 
     # Get detailed information about a specific receipt
     try:
@@ -96,7 +96,7 @@ async def get_receipt_detail(receipt_id: str, user_id: str = Depends(verify_toke
 
 @router.get("/", response_model=List[ReceiptResponse])
 async def list_receipts(
-    user_id: str = Depends(verify_token),
+    user_id: dict = Depends(get_current_user),
     skip: int = 0,
     limit: int = 20,
     category: Optional[str] = None,
@@ -131,7 +131,7 @@ async def list_receipts(
 async def update_receipt_items(
     receipt_id: str,
     updates: dict,
-    user_id: str = Depends(verify_token)
+    user_id: dict = Depends(get_current_user)
 ):
 
     # Update receipt details or shared status
@@ -151,7 +151,7 @@ async def update_receipt_items(
         )
 
 @router.delete("/{receipt_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_receipt(receipt_id: str, user_id: str = Depends(verify_token)):
+async def remove_receipt(receipt_id: str, user_id: dict = Depends(get_current_user)):
 
     # Delete a receipt
     try:
@@ -167,4 +167,30 @@ async def remove_receipt(receipt_id: str, user_id: str = Depends(verify_token)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting receipt: {str(e)}"
+        )
+
+@router.post("/", response_model=ReceiptResponse)
+async def create_receipt(
+    receipt_data: ReceiptCreate,
+    user_id: dict = Depends(get_current_user)
+):
+    """
+    Create a receipt from processed data (e.g., from receipt scanning)
+    """
+    try:
+        # Add user_id to the receipt data
+        receipt_dict = receipt_data.dict()
+        receipt_dict["user_id"] = user_id["uid"]
+        
+        print(f"Creating receipt with data: {receipt_dict}")  # Debug logging
+        
+        # Save the receipt
+        saved_receipt = await save_receipt(receipt_dict)
+        return saved_receipt
+        
+    except Exception as e:
+        print(f"Error creating receipt: {str(e)}")  # Debug logging
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating receipt: {str(e)}"
         )
