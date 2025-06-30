@@ -14,7 +14,7 @@ class Notification(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "notification123",
                 "user_id": "user123",
