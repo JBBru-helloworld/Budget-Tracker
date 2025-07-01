@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     MONGODB_DB_NAME: str = "budget_tracker"
     
     # Firebase
+    FIREBASE_API_KEY: str = ""
     FIREBASE_PROJECT_ID: str = ""
     FIREBASE_PRIVATE_KEY: str = ""
     FIREBASE_CLIENT_EMAIL: str = ""
