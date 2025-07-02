@@ -8,8 +8,10 @@ from app.controllers import (
     analytics_controller,
     tips_controller,
     settings_controller,
-    scan_controller
+    scan_controller,
+    dashboard_controller
 )
+from . import notifications
 
 # Create main API router
 api_router = APIRouter()
@@ -61,4 +63,16 @@ api_router.include_router(
     settings_controller.router,
     prefix="/settings",
     tags=["User Settings"]
+)
+
+api_router.include_router(
+    notifications.router,
+    prefix="/notifications",
+    tags=["Notifications"]
+)
+
+api_router.include_router(
+    dashboard_controller.router,
+    prefix="/dashboard",
+    tags=["Dashboard"]
 )
