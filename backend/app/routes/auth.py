@@ -5,6 +5,7 @@ from firebase_admin.exceptions import FirebaseError
 from ..models.models import UserProfile
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..services.firebase_service import verify_firebase_token
+from datetime import datetime
 
 router = APIRouter()
 security = HTTPBearer()
@@ -55,7 +56,8 @@ async def get_current_user(
     try:
         # Verify Firebase token
         token = credentials.credentials
-        user_id = await verify_firebase_token(token)
+        user_data = await verify_firebase_token(token)
+        user_id = user_data["uid"]
         
         # Get user profile from MongoDB
         user_profile = await request.app.mongodb["user_profiles"].find_one({"user_id": user_id})
@@ -95,7 +97,8 @@ async def update_user_profile(
     try:
         # Verify Firebase token
         token = credentials.credentials
-        user_id = await verify_firebase_token(token)
+        user_data_token = await verify_firebase_token(token)
+        user_id = user_data_token["uid"]
         
         # Update user profile in MongoDB
         result = await request.app.mongodb["user_profiles"].update_one(
