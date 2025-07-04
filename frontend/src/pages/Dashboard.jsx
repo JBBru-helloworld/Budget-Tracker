@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/outline";
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -61,7 +61,7 @@ const Dashboard = () => {
     try {
       const token = await currentUser.getIdToken();
       await axios.post(
-        `${API_URL}/budget`,
+        `${API_URL}/dashboard/budget`,
         { amount: parseFloat(newBudget) },
         {
           headers: {
@@ -166,26 +166,40 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+            <Link
+              to="/receipts/add"
+              className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors block text-center"
+            >
               <span className="block text-blue-600 font-medium">
                 Add Transaction
               </span>
-            </button>
-            <button className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+            </Link>
+            <button
+              onClick={() =>
+                handleSetBudget(prompt("Enter new budget amount:"))
+              }
+              className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+            >
               <span className="block text-green-600 font-medium">
                 Set Budget
               </span>
             </button>
-            <button className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+            <Link
+              to="/analytics"
+              className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors block text-center"
+            >
               <span className="block text-purple-600 font-medium">
                 View Reports
               </span>
-            </button>
-            <button className="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+            </Link>
+            <Link
+              to="/categories"
+              className="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors block text-center"
+            >
               <span className="block text-orange-600 font-medium">
                 Manage Categories
               </span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
