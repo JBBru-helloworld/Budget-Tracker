@@ -2,27 +2,11 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import firebase_admin
-from firebase_admin import credentials
 from app.config.settings import settings
 from app.routes.api import api_router
 from app.config.mongodb import connect_to_mongo, close_mongo_connection
 from app.routes import receipts
 from app.routes import notifications
-
-# Initialize Firebase Admin SDK
-cred = credentials.Certificate({
-    "type": "service_account",
-    "project_id": settings.FIREBASE_PROJECT_ID,
-    "private_key": settings.FIREBASE_PRIVATE_KEY.replace("\\n", "\n"),
-    "client_email": settings.FIREBASE_CLIENT_EMAIL,
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{settings.FIREBASE_CLIENT_EMAIL}"
-})
-
-firebase_admin.initialize_app(cred)
 
 # Create FastAPI app
 app = FastAPI(title="BudgetTracker API", version="1.0.0")
@@ -40,6 +24,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include API routes
+app.include_router(api_router, prefix="/api")
 app.include_router(receipts.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 
