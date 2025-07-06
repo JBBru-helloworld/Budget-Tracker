@@ -71,3 +71,8 @@ class ReceiptResponse(BaseModel):
         json_encoders = {
             ObjectId: lambda v: str(v)
         }
+
+class ProcessedReceiptResponse(BaseModel):
+    extracted_text: str
+    processed_data: Dict
+    image_path: Optional[str] = None
