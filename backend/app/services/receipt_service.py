@@ -6,18 +6,30 @@ from typing import List, Dict
 from app.models.receipt_model import Receipt, ReceiptItem, SharedExpense
 
 async def save_receipt(receipt_data: dict):
-    # Save a new receipt to the database.
-    db = await get_database()
-    receipt_data["created_at"] = datetime.now()
-    receipt_data["updated_at"] = datetime.now()
-    
-    # Process shared expenses
-    if receipt_data.get("is_shared"):
-        receipt_data["shared_expenses"] = await _calculate_shared_expenses(receipt_data["items"])
-    
-    # Insert receipt
-    result = await db.receipts.insert_one(receipt_data)
-    return str(result.inserted_id)
+    """Save a new receipt to the database and return the complete receipt object."""
+    try:
+        db = get_database()
+        receipt_data["created_at"] = datetime.now()
+        receipt_data["updated_at"] = datetime.now()
+        
+        # Process shared expenses
+        if receipt_data.get("is_shared"):
+            receipt_data["shared_expenses"] = await _calculate_shared_expenses(receipt_data["items"])
+        
+        # Insert receipt
+        result = await db.receipts.insert_one(receipt_data)
+        
+        # Retrieve the inserted receipt
+        inserted_receipt = await db.receipts.find_one({"_id": result.inserted_id})
+        
+        # Convert ObjectId to string
+        inserted_receipt["_id"] = str(inserted_receipt["_id"])
+        
+        return inserted_receipt
+        
+    except Exception as e:
+        print(f"Error saving receipt: {str(e)}")
+        raise e
 
 async def _calculate_shared_expenses(items: List[ReceiptItem]) -> List[SharedExpense]:
     # Calculate shared expenses based on item assignments.
@@ -38,7 +50,7 @@ async def _calculate_shared_expenses(items: List[ReceiptItem]) -> List[SharedExp
 
 async def assign_items_to_user(receipt_id: str, user_id: str, item_ids: List[str], target_user_id: str):
     # Assign items to a specific user.
-    db = await get_database()
+    db = get_database()
     
     # Get the receipt
     receipt = await db.receipts.find_one({
@@ -69,7 +81,7 @@ async def assign_items_to_user(receipt_id: str, user_id: str, item_ids: List[str
 
 async def get_receipt(receipt_id: str, user_id: str):
     # Get a specific receipt by ID.
-    db = await get_database()
+    db = get_database()
     receipt = await db.receipts.find_one({
         "_id": ObjectId(receipt_id),
         "$or": [
@@ -87,7 +99,7 @@ async def get_receipt(receipt_id: str, user_id: str):
 
 async def get_user_receipts(user_id: str, skip: int = 0, limit: int = 20, category: str = None, date_filters: dict = None):
     # Get all receipts for a user with optional filtering.
-    db = await get_database()
+    db = get_database()
     
     # Build query
     query = {
@@ -121,7 +133,7 @@ async def get_user_receipts(user_id: str, skip: int = 0, limit: int = 20, catego
 
 async def update_receipt(receipt_id: str, user_id: str, updates: dict):
     # Update a receipt.
-    db = await get_database()
+    db = get_database()
     updates["updated_at"] = datetime.now()
     
     # If items are updated, recalculate shared expenses
@@ -145,7 +157,7 @@ async def update_receipt(receipt_id: str, user_id: str, updates: dict):
 
 async def delete_receipt(receipt_id: str, user_id: str):
     # Delete a receipt.
-    db = await get_database()
+    db = get_database()
     result = await db.receipts.delete_one({
         "_id": ObjectId(receipt_id),
         "user_id": user_id
