@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import List, Dict, Any
 from ..models.receipt_model import Receipt, ReceiptCreate, ReceiptResponse, ReceiptItem
 from ..services.ocr_service import process_receipt_image
-from ..services.firebase_service import verify_firebase_token
+from ..services.firebase_service import get_user_id_from_token
 from ..config.mongodb import get_database
 from bson import ObjectId
 from datetime import datetime
@@ -16,7 +16,7 @@ router = APIRouter(
 @router.post("/scan")
 async def scan_receipt(
     image_data: str = Body(..., embed=True),
-    firebase_uid: str = Depends(verify_firebase_token)
+    firebase_uid: str = Depends(get_user_id_from_token)
 ):
     # Process a receipt image using OCR
     try:
@@ -42,7 +42,7 @@ async def scan_receipt(
 @router.post("/")
 async def create_receipt(
     receipt: ReceiptCreate,
-    firebase_uid: str = Depends(verify_firebase_token)
+    firebase_uid: str = Depends(get_user_id_from_token)
 ):
     # Create a new receipt in the database
     try:
