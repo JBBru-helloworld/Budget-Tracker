@@ -8,25 +8,31 @@ from datetime import datetime
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
-async def process_receipt_image(image_data: str) -> Dict[str, Any]:
+async def process_receipt_image(image_data: str, is_base64: bool = False) -> Dict[str, Any]:
     """
     Process receipt image using Gemini Vision API
     
     Args:
-        image_data: Base64 encoded image string
+        image_data: Base64 encoded image string or file path
+        is_base64: If True, treat image_data as base64, otherwise as file path
         
     Returns:
         Extracted receipt data
     """
     try:
-        # Decode base64 image if it contains the data URL prefix
-        if ',' in image_data:
-            image_bytes = base64.b64decode(image_data.split(',')[1])
+        if is_base64:
+            # Handle base64 image data
+            if ',' in image_data:
+                image_bytes = base64.b64decode(image_data.split(',')[1])
+            else:
+                image_bytes = base64.b64decode(image_data)
         else:
-            image_bytes = base64.b64decode(image_data)
+            # Handle file path
+            with open(image_data, 'rb') as image_file:
+                image_bytes = image_file.read()
         
-        # Initialize Gemini Pro Vision model
-        model = genai.GenerativeModel('gemini-pro-vision')
+        # Initialize Gemini Pro Flash model (updated from deprecated pro-vision)
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Create prompt for receipt extraction
         prompt = """
