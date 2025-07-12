@@ -7,7 +7,7 @@ from ..services.notification_service import (
     get_notification_count
 )
 from ..models.notifications_model import NotificationResponse
-from ..services.firebase_service import verify_firebase_token
+from ..services.firebase_service import get_user_id_from_token
 
 router = APIRouter(
     prefix="/notifications",
@@ -18,7 +18,7 @@ router = APIRouter(
 async def get_notifications(
     include_read: bool = False,
     limit: int = Query(20, gt=0, le=100),
-    firebase_uid: str = Depends(verify_firebase_token)
+    firebase_uid: str = Depends(get_user_id_from_token)
 ):
     # Get user's notifications
     try:
@@ -37,7 +37,7 @@ async def get_notifications(
 
 @router.get("/count", response_model=int)
 async def get_unread_notification_count(
-    firebase_uid: str = Depends(verify_firebase_token)
+    firebase_uid: str = Depends(get_user_id_from_token)
 ):
     # Get count of unread notifications
     try:
@@ -52,7 +52,7 @@ async def get_unread_notification_count(
 @router.put("/{notification_id}/read")
 async def mark_notification_read(
     notification_id: str = Path(..., title="Notification ID"),
-    firebase_uid: str = Depends(verify_firebase_token)
+    firebase_uid: str = Depends(get_user_id_from_token)
 ):
     # Mark a notification as read
     try:
@@ -75,7 +75,7 @@ async def mark_notification_read(
 
 @router.put("/read-all")
 async def mark_all_read(
-    firebase_uid: str = Depends(verify_firebase_token)
+    firebase_uid: str = Depends(get_user_id_from_token)
 ):
     # Mark all notifications as read
     try:
