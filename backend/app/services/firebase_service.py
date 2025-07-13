@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, auth
 from firebase_admin.exceptions import FirebaseError
 from fastapi import HTTPException, status
-from ..config import settings
+from ..config.settings import settings
 import json
 
 # Initialize Firebase Admin SDK
@@ -22,9 +22,36 @@ except ValueError:
     # App already exists
     firebase_app = firebase_admin.get_app()
 
-async def verify_firebase_token(token: str) -> str:
+async def verify_firebase_token(token: str) -> dict:
     """
-    Verify Firebase ID token and return the user ID
+    Verify Firebase ID token and return user information
+    
+    Args:
+        token: Firebase ID token
+        
+    Returns:
+        User information from the token
+        
+    Raises:
+        HTTPException: If token is invalid
+    """
+    try:
+        decoded_token = auth.verify_id_token(token)
+        return {
+            "uid": decoded_token["uid"],
+            "email": decoded_token.get("email"),
+            "name": decoded_token.get("name"),
+            "firebase_uid": decoded_token["uid"]
+        }
+    except FirebaseError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid authentication token: {str(e)}"
+        )
+
+async def get_user_id_from_token(token: str) -> str:
+    """
+    Verify Firebase ID token and return just the user ID
     
     Args:
         token: Firebase ID token
@@ -35,11 +62,5 @@ async def verify_firebase_token(token: str) -> str:
     Raises:
         HTTPException: If token is invalid
     """
-    try:
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token["uid"]
-    except FirebaseError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication token: {str(e)}"
-        )
+    user_data = await verify_firebase_token(token)
+    return user_data["uid"]
