@@ -15,7 +15,7 @@ const getAuthToken = async () => {
 export const getUserProfile = async (userId) => {
   try {
     const token = await getAuthToken();
-    const response = await axios.get(`${API_URL}/profiles/${userId}`, {
+    const response = await axios.get(`${API_URL}/profile/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -39,7 +39,7 @@ export const getUserProfile = async (userId) => {
 
 export const createUserProfile = async (profileData) => {
   const token = await getAuthToken();
-  const response = await axios.post(`${API_URL}/profiles/`, profileData, {
+  const response = await axios.post(`${API_URL}/profile/`, profileData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -50,16 +50,12 @@ export const createUserProfile = async (profileData) => {
 
 export const updateUserProfile = async (userId, profileData) => {
   const token = await getAuthToken();
-  const response = await axios.put(
-    `${API_URL}/profiles/${userId}`,
-    profileData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await axios.put(`${API_URL}/profile/`, profileData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
   return response.data;
 };
 
