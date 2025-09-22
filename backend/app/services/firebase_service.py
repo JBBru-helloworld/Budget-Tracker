@@ -2,7 +2,8 @@
 import firebase_admin
 from firebase_admin import credentials, auth
 from firebase_admin.exceptions import FirebaseError
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..config.settings import settings
 import json
 
@@ -21,6 +22,9 @@ try:
 except ValueError:
     # App already exists
     firebase_app = firebase_admin.get_app()
+
+# Security scheme for bearer token
+security = HTTPBearer()
 
 async def verify_firebase_token(token: str) -> dict:
     """
@@ -49,12 +53,12 @@ async def verify_firebase_token(token: str) -> dict:
             detail=f"Invalid authentication token: {str(e)}"
         )
 
-async def get_user_id_from_token(token: str) -> str:
+async def get_user_id_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     """
     Verify Firebase ID token and return just the user ID
     
     Args:
-        token: Firebase ID token
+        credentials: HTTP authorization credentials from FastAPI dependency
         
     Returns:
         User ID from the token
@@ -62,5 +66,6 @@ async def get_user_id_from_token(token: str) -> str:
     Raises:
         HTTPException: If token is invalid
     """
+    token = credentials.credentials
     user_data = await verify_firebase_token(token)
     return user_data["uid"]
