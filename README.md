@@ -2,6 +2,12 @@
 
 A modern web application that helps users track and manage their expenses by scanning receipts, allocating costs, and analysing spending patterns.
 
+## 🌐 Live Demo
+
+- **Frontend Application**: [https://budget-tracker.jbbru.com](https://budget-tracker.jbbru.com)
+- **Backend API**: [https://budgetapi.jbbru.com](https://budgetapi.jbbru.com)
+- **API Documentation**: [https://budgetapi.jbbru.com/docs](https://budgetapi.jbbru.com/docs)
+
 ## 📋 Overview
 
 Budget Tracker is a comprehensive financial management tool that combines receipt scanning technology with expense tracking and budget analytics. Users can upload or scan their receipts, which are then processed using AI to extract individual items. These items can be allocated to different users for shared expenses or categorised for personal budgeting. The application provides visual analytics to help users understand their spending habits and offers personalised money-saving tips.
