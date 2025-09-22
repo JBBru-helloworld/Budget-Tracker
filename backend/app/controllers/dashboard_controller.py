@@ -29,28 +29,16 @@ async def get_dashboard_data(
         total_spent = 0.0
         
         for receipt in receipts:
-            if hasattr(receipt, 'items') and receipt.items:
-                for item in receipt.items:
-                    transaction = {
-                        "_id": str(receipt.id) + "_" + item.get('name', '').replace(' ', '_'),
-                        "description": item.get('name', 'Unknown Item'),
-                        "category": item.get('category', 'Uncategorized'),
-                        "amount": -float(item.get('price', 0)),  # Negative for expenses
-                        "date": receipt.date.isoformat() if hasattr(receipt.date, 'isoformat') else str(receipt.date)
-                    }
-                    transactions.append(transaction)
-                    total_spent += float(item.get('price', 0))
-            else:
-                # If no items, use the receipt total
-                transaction = {
-                    "_id": str(receipt.id),
-                    "description": f"Purchase at {receipt.store_name}",
-                    "category": "General",
-                    "amount": -float(receipt.total_amount),
-                    "date": receipt.date.isoformat() if hasattr(receipt.date, 'isoformat') else str(receipt.date)
-                }
-                transactions.append(transaction)
-                total_spent += float(receipt.total_amount)
+            # Create transaction from receipt data
+            transaction = {
+                "_id": str(receipt.get('id', '')),
+                "description": f"Purchase at {receipt.get('store', 'Unknown Store')}",
+                "category": receipt.get('category', 'Other'),
+                "amount": -float(receipt.get('amount', 0)),  # Negative for expenses
+                "date": receipt.get('date').isoformat() if receipt.get('date') and hasattr(receipt.get('date'), 'isoformat') else str(receipt.get('date', ''))
+            }
+            transactions.append(transaction)
+            total_spent += float(receipt.get('amount', 0))
         
         # Get budget (for now, use a default - you can implement user budget settings later)
         budget = 1000.0  # Default budget, can be made configurable
@@ -62,6 +50,7 @@ async def get_dashboard_data(
         }
         
     except Exception as e:
+        print(f"Dashboard error: {str(e)}")  # Debug logging
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching dashboard data: {str(e)}"
