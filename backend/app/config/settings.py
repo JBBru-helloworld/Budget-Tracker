@@ -31,8 +31,23 @@ class Settings(BaseSettings):
         "http://localhost:3001",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:8000",
+        "https://budget.jbbru.com",
+        "https://jbbru.com",
+        "https://*.vercel.app"  # Allow Vercel preview deployments
     ]
+    
+    # Allow override from environment variable
+    def __init__(self, **data):
+        super().__init__(**data)
+        cors_env = os.getenv("CORS_ORIGINS")
+        if cors_env:
+            try:
+                import json
+                self.CORS_ORIGINS = json.loads(cors_env)
+            except json.JSONDecodeError:
+                # Fallback to comma-separated values
+                self.CORS_ORIGINS = [origin.strip() for origin in cors_env.split(",")]
     
     # Update to new Pydantic v2 format
     model_config = SettingsConfigDict(
