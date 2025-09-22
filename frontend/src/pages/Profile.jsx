@@ -5,10 +5,16 @@ import {
   updateUserProfile,
   uploadAvatar,
 } from "../services/profileService";
-import { toast } from "react-hot-toast";
+// import { toast } from "react-hot-toast";
+
+// Temporary toast replacement
+const toast = {
+  error: (msg) => console.error(msg),
+  success: (msg) => console.log(msg),
+};
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   const [profile, setProfile] = useState({
     display_name: "",
     email: "",
@@ -22,24 +28,25 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (user?.uid) {
+      if (currentUser?.uid) {
         try {
-          const profileData = await getUserProfile(user.uid);
+          const profileData = await getUserProfile(currentUser.uid);
           setProfile({
-            display_name: profileData.display_name || user.displayName || "",
-            email: profileData.email || user.email || "",
+            display_name:
+              profileData.display_name || currentUser.displayName || "",
+            email: profileData.email || currentUser.email || "",
             monthly_budget: profileData.monthly_budget?.toString() || "",
-            avatar_url: profileData.avatar_url || user.photoURL,
+            avatar_url: profileData.avatar_url || currentUser.photoURL,
           });
         } catch (error) {
           console.error("Error fetching profile:", error);
           toast.error("Failed to load profile");
           // If profile doesn't exist yet, use Firebase auth data
           setProfile({
-            display_name: user.displayName || "",
-            email: user.email || "",
+            display_name: currentUser.displayName || "",
+            email: currentUser.email || "",
             monthly_budget: "",
-            avatar_url: user.photoURL,
+            avatar_url: currentUser.photoURL,
           });
         } finally {
           setLoading(false);
@@ -48,7 +55,7 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [currentUser]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -94,11 +101,11 @@ const ProfilePage = () => {
           : null,
       };
 
-      await updateUserProfile(user.uid, updateData);
+      await updateUserProfile(currentUser.uid, updateData);
 
       // Upload avatar if selected
       if (file) {
-        const avatarUrl = await uploadAvatar(user.uid, file);
+        const avatarUrl = await uploadAvatar(currentUser.uid, file);
         setProfile({
           ...profile,
           avatar_url: avatarUrl,
