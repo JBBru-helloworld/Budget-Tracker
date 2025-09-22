@@ -4,16 +4,16 @@ from typing import Optional
 import os
 from app.models.user_model import UserProfile, UserProfileUpdate
 from app.services.user_service import get_user_profile, update_user_profile
-from app.controllers.auth_controller import verify_token
+from app.services.firebase_service import get_user_id_from_token
 
 router = APIRouter()
 
 @router.get("/", response_model=UserProfile)
-async def get_profile(user_id: str = Depends(verify_token)):
+async def get_profile(user_id: str = Depends(get_user_id_from_token)):
 
     # Get user profile information
     try:
-        profile = await get_user_profile(user_id["uid"])
+        profile = await get_user_profile(user_id)
         if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -30,12 +30,12 @@ async def get_profile(user_id: str = Depends(verify_token)):
 @router.put("/", response_model=UserProfile)
 async def update_profile(
     profile_update: UserProfileUpdate,
-    user_id: str = Depends(verify_token)
+    user_id: str = Depends(get_user_id_from_token)
 ):
 
     # Update user profile information
     try:
-        updated_profile = await update_user_profile(user_id["uid"], profile_update.dict(exclude_unset=True))
+        updated_profile = await update_user_profile(user_id, profile_update.dict(exclude_unset=True))
         if not updated_profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -52,7 +52,7 @@ async def update_profile(
 @router.post("/avatar", response_model=UserProfile)
 async def upload_avatar(
     file: UploadFile = File(...),
-    user_id: str = Depends(verify_token)
+    user_id: str = Depends(get_user_id_from_token)
 ):
 
     # Upload user avatar image
@@ -72,12 +72,12 @@ async def upload_avatar(
         os.makedirs("static/avatars", exist_ok=True)
         
         # Save avatar image
-        avatar_path = f"static/avatars/{user_id['uid']}.{file_ext}"
+        avatar_path = f"static/avatars/{user_id}.{file_ext}"
         with open(avatar_path, "wb") as buffer:
             buffer.write(await file.read())
         
         # Update user profile with avatar path
-        updated_profile = await update_user_profile(user_id["uid"], {"avatar": avatar_path})
+        updated_profile = await update_user_profile(user_id, {"avatar": avatar_path})
         if not updated_profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
