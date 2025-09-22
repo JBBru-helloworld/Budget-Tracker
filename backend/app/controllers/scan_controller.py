@@ -3,7 +3,7 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from typing import List
 import os
 import shutil
-from app.middleware.auth_middleware import get_current_user
+from app.services.firebase_service import get_user_id_from_token
 from app.services.ocr_service import process_receipt_image
 from app.models.receipt_model import ProcessedReceiptResponse
 import uuid
@@ -13,7 +13,7 @@ router = APIRouter()
 @router.post("/receipt", response_model=ProcessedReceiptResponse)
 async def scan_receipt(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    user_id: str = Depends(get_user_id_from_token)
 ):
     """
     Scan and process a receipt image
@@ -66,7 +66,7 @@ async def scan_receipt(
 @router.post("/text")
 async def process_receipt_text_endpoint(
     text: str,
-    current_user: dict = Depends(get_current_user)
+    user_id: str = Depends(get_user_id_from_token)
 ):
     """
     Process receipt text directly without image upload
@@ -126,7 +126,7 @@ async def process_receipt_text_endpoint(
 @router.post("/receipt-base64", response_model=ProcessedReceiptResponse)
 async def scan_receipt_base64(
     image_data: dict,
-    current_user: dict = Depends(get_current_user)
+    user_id: str = Depends(get_user_id_from_token)
 ):
     """
     Scan and process a receipt from base64 image data
