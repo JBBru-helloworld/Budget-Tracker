@@ -26,7 +26,7 @@ const ReceiptDetail = () => {
 
         // Fetch receipt from API
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/receipts/${id}`,
+          `${import.meta.env.VITE_API_URL}/receipts/${id}`,
           {
             method: "GET",
             headers: {
@@ -66,7 +66,7 @@ const ReceiptDetail = () => {
 
       // Delete receipt from API
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/receipts/${id}`,
+        `${import.meta.env.VITE_API_URL}/receipts/${id}`,
         {
           method: "DELETE",
           headers: {
