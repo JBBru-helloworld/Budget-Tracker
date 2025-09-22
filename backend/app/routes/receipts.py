@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.responses import JSONResponse
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from ..models.receipt_model import Receipt, ReceiptCreate, ReceiptResponse, ReceiptItem
 from ..services.ocr_service import process_receipt_image
 from ..services.firebase_service import get_user_id_from_token
+from ..services.receipt_service import get_user_receipts, save_receipt
 from ..config.mongodb import get_database
 from bson import ObjectId
 from datetime import datetime
@@ -12,6 +13,44 @@ router = APIRouter(
     prefix="/receipts",
     tags=["receipts"]
 )
+
+@router.get("/")
+async def get_receipts(
+    firebase_uid: str = Depends(get_user_id_from_token),
+    skip: int = 0,
+    limit: int = 20,
+    category: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Get all receipts for the authenticated user
+    """
+    try:
+        # Build date filters
+        date_filters = {}
+        if start_date:
+            date_filters["start"] = datetime.strptime(start_date, "%Y-%m-%d")
+        if end_date:
+            date_filters["end"] = datetime.strptime(end_date, "%Y-%m-%d")
+        
+        # Get receipts from service
+        receipts = await get_user_receipts(
+            firebase_uid,
+            skip=skip,
+            limit=limit,
+            category=category,
+            date_filters=date_filters
+        )
+        
+        return receipts
+        
+    except Exception as e:
+        print(f"Error fetching receipts for user {firebase_uid}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch receipts: {str(e)}"
+        )
 
 @router.post("/scan")
 async def scan_receipt(
@@ -46,25 +85,14 @@ async def create_receipt(
 ):
     # Create a new receipt in the database
     try:
-        db = get_database()
-        
         # Prepare receipt data for database
         receipt_dict = receipt.dict()
         receipt_dict["user_id"] = firebase_uid
-        receipt_dict["created_at"] = datetime.now()
-        receipt_dict["updated_at"] = datetime.now()
         
-        # Insert the receipt into MongoDB
-        result = db.receipts.insert_one(receipt_dict)
-        receipt_id = str(result.inserted_id)
+        # Save the receipt using the service
+        saved_receipt = await save_receipt(receipt_dict)
         
-        # Return the created receipt with ID
-        response_data = receipt_dict.copy()
-        response_data["id"] = receipt_id
-        if "_id" in response_data:
-            del response_data["_id"]
-        
-        return response_data
+        return saved_receipt
         
     except Exception as e:
         raise HTTPException(
