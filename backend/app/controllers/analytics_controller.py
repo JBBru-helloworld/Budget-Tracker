@@ -5,13 +5,95 @@ from datetime import datetime, timedelta
 import calendar
 from app.services.receipt_service import get_user_receipts
 from app.services.analytics_service import get_spending_summary
-from app.controllers.auth_controller import verify_token
+from app.services.firebase_service import get_user_id_from_token
 
 router = APIRouter()
 
+@router.get("/")
+async def get_analytics(
+    user_id: str = Depends(get_user_id_from_token),
+    range: str = "weekly"  # weekly, monthly, yearly
+):
+    """Get analytics data for charts in the format expected by the frontend"""
+    try:
+        today = datetime.now()
+        data = []
+        
+        if range == "weekly":
+            # Get last 8 weeks of data
+            for i in range(8):
+                week_end = today - timedelta(days=7 * i)
+                week_start = week_end - timedelta(days=7)
+                
+                # Get receipts for this week
+                receipts = await get_user_receipts(
+                    user_id,
+                    date_filters={"start": week_start, "end": week_end}
+                )
+                
+                total = sum(receipt.get("amount", 0) for receipt in receipts)
+                data.append({
+                    "period": f"Week {8-i}",
+                    "amount": total
+                })
+                
+        elif range == "monthly":
+            # Get last 12 months of data
+            for i in range(12):
+                month = today.month - i
+                year = today.year
+                while month <= 0:
+                    month += 12
+                    year -= 1
+                
+                month_start = datetime(year, month, 1)
+                last_day = calendar.monthrange(year, month)[1]
+                month_end = datetime(year, month, last_day)
+                
+                # Get receipts for this month
+                receipts = await get_user_receipts(
+                    user_id,
+                    date_filters={"start": month_start, "end": month_end}
+                )
+                
+                total = sum(receipt.get("amount", 0) for receipt in receipts)
+                data.append({
+                    "period": month_start.strftime("%b %Y"),
+                    "amount": total
+                })
+                
+        elif range == "yearly":
+            # Get last 5 years of data
+            for i in range(5):
+                year = today.year - i
+                year_start = datetime(year, 1, 1)
+                year_end = datetime(year, 12, 31)
+                
+                # Get receipts for this year
+                receipts = await get_user_receipts(
+                    user_id,
+                    date_filters={"start": year_start, "end": year_end}
+                )
+                
+                total = sum(receipt.get("amount", 0) for receipt in receipts)
+                data.append({
+                    "period": str(year),
+                    "amount": total
+                })
+        
+        # Reverse to get chronological order
+        data.reverse()
+        return data
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating analytics: {str(e)}"
+        )
+
 @router.get("/spending")
 async def get_spending_analytics(
-    user_id: str = Depends(verify_token),
+    user_id: str = Depends(get_user_id_from_token),
     time_period: str = "weekly",  # weekly, monthly, yearly
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
@@ -50,7 +132,7 @@ async def get_spending_analytics(
     try:
         # Get spending summary based on date range and category filter
         spending_data = await get_spending_summary(
-            user_id["uid"],
+            user_id,
             datetime.strptime(start_date, "%Y-%m-%d"),
             datetime.strptime(end_date, "%Y-%m-%d"),
             category
@@ -71,7 +153,7 @@ async def get_spending_analytics(
 
 @router.get("/categories")
 async def get_category_breakdown(
-    user_id: str = Depends(verify_token),
+    user_id: str = Depends(get_user_id_from_token),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
@@ -90,7 +172,7 @@ async def get_category_breakdown(
         
         # Get receipts for the date range
         receipts = await get_user_receipts(
-            user_id["uid"],
+            user_id,
             date_filters={"start": start, "end": end}
         )
         
