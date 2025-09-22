@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
   // Get current user data from backend
   const fetchUserData = async (userId) => {
     try {
-      const response = await apiService.get(`/api/users/${userId}`);
+      const response = await apiService.get(`/api/profile/`);
       return response.data;
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -101,7 +101,7 @@ export function AuthProvider({ children }) {
   // Update user profile
   const updateProfile = async (userId, userData) => {
     try {
-      const response = await apiService.put(`/api/users/${userId}`, userData);
+      const response = await apiService.put(`/api/profile/`, userData);
       return response.data;
     } catch (error) {
       setError(error.message);
