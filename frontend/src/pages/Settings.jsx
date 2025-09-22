@@ -2,29 +2,58 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const Settings = () => {
-  const { currentUser, updateProfile, resetPassword } = useAuth();
+  const { currentUser, updateProfile, resetPassword, fetchUserData } =
+    useAuth();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentUser) {
-      setDisplayName(currentUser.display_name || "");
-      setEmail(currentUser.email || "");
-    }
-  }, [currentUser]);
+    const loadUserData = async () => {
+      if (currentUser) {
+        try {
+          setEmail(currentUser.email || "");
+          setDisplayName(currentUser.displayName || "");
+
+          // Try to fetch additional user data from backend
+          const userData = await fetchUserData(currentUser.uid);
+          if (userData) {
+            setDisplayName(
+              userData.display_name || currentUser.displayName || ""
+            );
+          }
+        } catch (error) {
+          console.error("Error loading user data:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [currentUser, fetchUserData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setError(null);
+      setMessage(null);
       await updateProfile(currentUser.uid, { display_name: displayName });
       setMessage("Profile updated successfully.");
     } catch (err) {
       setError(err.message);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-md mx-auto space-y-6">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   const handlePasswordReset = async () => {
     try {
