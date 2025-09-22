@@ -1,17 +1,36 @@
 from datetime import datetime, timedelta
 import random
+import os
 from pymongo import MongoClient
 from bson import ObjectId
 import firebase_admin
 from firebase_admin import credentials, auth
 
-# Initialize Firebase Admin SDK with your service account
-cred = credentials.Certificate('budget-tracker-bbdf7-firebase-adminsdk-fbsvc-146f301fb9.json')
-firebase_admin.initialize_app(cred)
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
 
-# Connect to MongoDB
-client = MongoClient("mongodb://localhost:27017")
-db = client["budget_tracker"]
+# Initialize Firebase Admin SDK with your service account
+cred_dict = {
+    "type": "service_account",
+    "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace('\\n', '\n'),
+    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+    "token_uri": "https://oauth2.googleapis.com/token",
+}
+cred = credentials.Certificate(cred_dict)
+
+try:
+    firebase_admin.initialize_app(cred)
+except ValueError:
+    # App already initialized
+    pass
+
+# Connect to MongoDB Atlas
+MONGODB_URI = os.getenv("MONGODB_URI")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME")
+client = MongoClient(MONGODB_URI)
+db = client[MONGODB_DB_NAME]
 
 # Get or create user profile
 EMAIL = "jb.brubusiness3@gmail.com"
