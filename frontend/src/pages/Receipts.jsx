@@ -40,7 +40,7 @@ const Receipts = () => {
 
         // Fetch receipts from API
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/receipts`,
+          `${import.meta.env.VITE_API_URL}/receipts`,
           {
             method: "GET",
             headers: {
@@ -73,7 +73,7 @@ const Receipts = () => {
   // Filter and sort receipts
   const filteredReceipts = receipts
     .filter((receipt) => {
-      const matchesSearch = receipt.store
+      const matchesSearch = (receipt.store || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
       const matchesCategory =
