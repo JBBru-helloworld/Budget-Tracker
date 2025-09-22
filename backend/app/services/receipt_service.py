@@ -127,9 +127,39 @@ async def get_user_receipts(user_id: str, skip: int = 0, limit: int = 20, catego
     async for receipt in cursor:
         receipt["id"] = str(receipt["_id"])
         del receipt["_id"]
-        receipts.append(receipt)
+        
+        # Transform data to match frontend expectations
+        formatted_receipt = {
+            "id": receipt["id"],
+            "store": receipt.get("store_name", "Unknown Store"),
+            "amount": receipt.get("total_amount", 0),
+            "date": receipt.get("date"),
+            "category": _get_primary_category(receipt.get("items", [])),
+            "description": f"{len(receipt.get('items', []))} items",
+            "user_id": receipt.get("user_id"),
+            "created_at": receipt.get("created_at"),
+            "updated_at": receipt.get("updated_at")
+        }
+        receipts.append(formatted_receipt)
     
     return receipts
+
+def _get_primary_category(items):
+    """Get the primary category from receipt items"""
+    if not items:
+        return "Other"
+    
+    # Count categories
+    category_counts = {}
+    for item in items:
+        category = item.get("category", "Other")
+        category_counts[category] = category_counts.get(category, 0) + 1
+    
+    # Return the most common category
+    if category_counts:
+        return max(category_counts.items(), key=lambda x: x[1])[0]
+    
+    return "Other"
 
 async def update_receipt(receipt_id: str, user_id: str, updates: dict):
     # Update a receipt.
