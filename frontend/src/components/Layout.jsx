@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
+import { getUserProfile } from "../services/profileService";
 import {
   HomeIcon,
   ReceiptRefundIcon,
@@ -20,6 +21,36 @@ const Layout = () => {
   const { unreadCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Helper function to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith("http")) return avatarPath; // Already a full URL
+    if (avatarPath.startsWith("static/")) {
+      return `${
+        import.meta.env.VITE_API_URL?.replace("/api", "") ||
+        "http://localhost:8000"
+      }/${avatarPath}`;
+    }
+    return avatarPath;
+  };
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (currentUser?.uid) {
+        try {
+          const profileData = await getUserProfile(currentUser.uid);
+          setUserProfile(profileData);
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -133,7 +164,15 @@ const Layout = () => {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
-                  <UserCircleIcon className="h-8 w-8 text-gray-600" />
+                  {userProfile?.avatar && getAvatarUrl(userProfile.avatar) ? (
+                    <img
+                      src={getAvatarUrl(userProfile.avatar)}
+                      alt="User avatar"
+                      className="h-8 w-8 rounded-full object-cover border border-gray-300"
+                    />
+                  ) : (
+                    <UserCircleIcon className="h-8 w-8 text-gray-600" />
+                  )}
                   <span className="hidden md:block text-sm font-medium text-gray-700">
                     {currentUser?.displayName ||
                       currentUser?.email?.split("@")[0]}
