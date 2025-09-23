@@ -13,8 +13,11 @@ async def get_profile(user_id: str = Depends(get_user_id_from_token)):
 
     # Get user profile information
     try:
+        print(f"DEBUG: get_profile called for user: {user_id}")
         profile = await get_user_profile(user_id)
+        print(f"DEBUG: Retrieved profile: {profile}")
         if not profile:
+            print(f"DEBUG: No profile found for user: {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User profile not found"
@@ -25,6 +28,7 @@ async def get_profile(user_id: str = Depends(get_user_id_from_token)):
         # Re-raise HTTP exceptions (like 404) without modification
         raise
     except Exception as e:
+        print(f"DEBUG: Error in get_profile: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching user profile: {str(e)}"

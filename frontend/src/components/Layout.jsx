@@ -25,23 +25,25 @@ const Layout = () => {
 
   // Helper function to get full avatar URL
   const getAvatarUrl = (avatarPath) => {
+    console.log("DEBUG: getAvatarUrl called with:", avatarPath);
     if (!avatarPath) return null;
     if (avatarPath.startsWith("http")) return avatarPath; // Already a full URL
     if (avatarPath.startsWith("static/")) {
-      return `${
-        import.meta.env.VITE_API_URL?.replace("/api", "") ||
-        "http://localhost:8000"
-      }/${avatarPath}`;
+      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
+      const fullUrl = `${baseUrl}/${avatarPath}`;
+      console.log("DEBUG: Generated avatar URL:", fullUrl);
+      return fullUrl;
     }
+    console.log("DEBUG: Using avatarPath as-is:", avatarPath);
     return avatarPath;
-  };
-
-  // Fetch user profile data
+  };  // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
       if (currentUser?.uid) {
         try {
+          console.log("DEBUG: Fetching profile for user:", currentUser.uid);
           const profileData = await getUserProfile(currentUser.uid);
+          console.log("DEBUG: Received profile data:", profileData);
           setUserProfile(profileData);
         } catch (error) {
           console.error("Error fetching user profile:", error);
