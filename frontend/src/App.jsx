@@ -12,6 +12,7 @@ import Receipts from "./pages/Receipts";
 import ScanReceipt from "./pages/ScanReceipt";
 import ReceiptDetail from "./pages/ReceiptDetail";
 import Notifications from "./pages/Notifications";
+import Analytics from "./pages/Analytics";
 import { NotificationProvider } from "./context/NotificationContext";
 import "./index.css";
 
@@ -37,6 +38,7 @@ function App() {
               <Route path="receipts/scan" element={<ScanReceipt />} />
               <Route path="receipts/:id" element={<ReceiptDetail />} />
               <Route path="notifications" element={<Notifications />} />
+              <Route path="analytics" element={<Analytics />} />
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
