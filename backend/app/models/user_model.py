@@ -15,15 +15,28 @@ class UserResponse(BaseModel):
     message: Optional[str] = None
 
 class UserProfile(BaseModel):
-    user_id: str
+    id: Optional[str] = Field(None, alias="_id")
+    firebase_uid: str
     email: EmailStr
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     display_name: Optional[str] = None
     avatar: Optional[str] = None
+    monthly_budget: Optional[float] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     preferences: Optional[Dict] = None
+    
+    class Config:
+        populate_by_name = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 class UserProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     display_name: Optional[str] = None
     avatar: Optional[str] = None
+    monthly_budget: Optional[float] = None
     preferences: Optional[Dict] = None

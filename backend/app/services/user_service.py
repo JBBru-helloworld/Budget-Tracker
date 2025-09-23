@@ -39,7 +39,8 @@ async def update_user_profile(firebase_uid, update_data):
         {"$set": update_data}
     )
     
-    if result.modified_count:
+    # Check if the document was matched (exists), not just modified
+    if result.matched_count:
         # Get and return updated profile
         user_profile = await db.user_profiles.find_one({"firebase_uid": firebase_uid})
         user_profile["_id"] = str(user_profile["_id"])

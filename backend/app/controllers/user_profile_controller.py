@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from typing import Optional
 import os
 from app.models.user_model import UserProfile, UserProfileUpdate
-from app.services.user_service import get_user_profile, update_user_profile
+from app.services.user_service import get_user_profile, update_user_profile, create_user_profile
 from app.services.firebase_service import get_user_id_from_token
 
 router = APIRouter()
@@ -21,10 +21,46 @@ async def get_profile(user_id: str = Depends(get_user_id_from_token)):
             )
         
         return profile
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404) without modification
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching user profile: {str(e)}"
+        )
+
+@router.post("/", response_model=UserProfile)
+async def create_profile(
+    profile_data: UserProfileUpdate,
+    user_id: str = Depends(get_user_id_from_token)
+):
+    # Create a new user profile
+    try:
+        # Check if profile already exists
+        existing_profile = await get_user_profile(user_id)
+        if existing_profile:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="User profile already exists"
+            )
+        
+        # Prepare profile data
+        profile_dict = profile_data.dict(exclude_unset=True)
+        profile_dict["firebase_uid"] = user_id
+        
+        # Create the profile
+        created_profile = await create_user_profile(profile_dict)
+        
+        return created_profile
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions without modification
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating user profile: {str(e)}"
         )
 
 @router.put("/", response_model=UserProfile)
@@ -35,14 +71,30 @@ async def update_profile(
 
     # Update user profile information
     try:
-        updated_profile = await update_user_profile(user_id, profile_update.dict(exclude_unset=True))
-        if not updated_profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User profile not found"
-            )
+        # Check if profile exists
+        existing_profile = await get_user_profile(user_id)
         
-        return updated_profile
+        if not existing_profile:
+            # Profile doesn't exist, create it
+            profile_dict = profile_update.dict(exclude_unset=True)
+            profile_dict["firebase_uid"] = user_id
+            
+            created_profile = await create_user_profile(profile_dict)
+            return created_profile
+        else:
+            # Profile exists, update it
+            updated_profile = await update_user_profile(user_id, profile_update.dict(exclude_unset=True))
+            if not updated_profile:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User profile not found"
+                )
+            
+            return updated_profile
+            
+    except HTTPException:
+        # Re-raise HTTP exceptions without modification
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
