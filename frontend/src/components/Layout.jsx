@@ -26,10 +26,10 @@ const Layout = () => {
   // Helper function to get full avatar URL
   const getAvatarUrl = (avatarPath) => {
     if (!avatarPath) return null;
-    
+
     // Firebase Storage URLs are already complete
     if (avatarPath.startsWith("http")) return avatarPath;
-    
+
     // Legacy local storage paths (for backwards compatibility)
     if (avatarPath.startsWith("static/")) {
       const baseUrl =
@@ -37,9 +37,9 @@ const Layout = () => {
         "http://localhost:8000";
       return `${baseUrl}/${avatarPath}`;
     }
-    
+
     return avatarPath;
-  };  // Fetch user profile data
+  }; // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
       if (currentUser?.uid) {
@@ -168,7 +168,9 @@ const Layout = () => {
                   className="flex items-center space-x-2 focus:outline-none"
                 >
                   {(() => {
-                    const avatarUrl = userProfile?.avatar ? getAvatarUrl(userProfile.avatar) : null;
+                    const avatarUrl = userProfile?.avatar
+                      ? getAvatarUrl(userProfile.avatar)
+                      : null;
                     return avatarUrl ? (
                       <img
                         src={avatarUrl}
