@@ -25,27 +25,26 @@ const Layout = () => {
 
   // Helper function to get full avatar URL
   const getAvatarUrl = (avatarPath) => {
-    console.log("DEBUG: getAvatarUrl called with:", avatarPath);
     if (!avatarPath) return null;
-    if (avatarPath.startsWith("http")) return avatarPath; // Already a full URL
+    
+    // Firebase Storage URLs are already complete
+    if (avatarPath.startsWith("http")) return avatarPath;
+    
+    // Legacy local storage paths (for backwards compatibility)
     if (avatarPath.startsWith("static/")) {
       const baseUrl =
         import.meta.env.VITE_API_URL?.replace("/api", "") ||
         "http://localhost:8000";
-      const fullUrl = `${baseUrl}/${avatarPath}`;
-      console.log("DEBUG: Generated avatar URL:", fullUrl);
-      return fullUrl;
+      return `${baseUrl}/${avatarPath}`;
     }
-    console.log("DEBUG: Using avatarPath as-is:", avatarPath);
+    
     return avatarPath;
-  }; // Fetch user profile data
+  };  // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
       if (currentUser?.uid) {
         try {
-          console.log("DEBUG: Fetching profile for user:", currentUser.uid);
           const profileData = await getUserProfile(currentUser.uid);
-          console.log("DEBUG: Received profile data:", profileData);
           setUserProfile(profileData);
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -168,15 +167,18 @@ const Layout = () => {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
-                  {userProfile?.avatar && getAvatarUrl(userProfile.avatar) ? (
-                    <img
-                      src={getAvatarUrl(userProfile.avatar)}
-                      alt="User avatar"
-                      className="h-8 w-8 rounded-full object-cover border border-gray-300"
-                    />
-                  ) : (
-                    <UserCircleIcon className="h-8 w-8 text-gray-600" />
-                  )}
+                  {(() => {
+                    const avatarUrl = userProfile?.avatar ? getAvatarUrl(userProfile.avatar) : null;
+                    return avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="User avatar"
+                        className="h-8 w-8 rounded-full object-cover border border-gray-300"
+                      />
+                    ) : (
+                      <UserCircleIcon className="h-8 w-8 text-gray-600" />
+                    );
+                  })()}
                   <span className="hidden md:block text-sm font-medium text-gray-700">
                     {currentUser?.displayName ||
                       currentUser?.email?.split("@")[0]}
