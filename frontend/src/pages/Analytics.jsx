@@ -29,7 +29,7 @@ const Analytics = () => {
 
         const token = await currentUser.getIdToken();
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/analytics?range=${view}`,
+          `${import.meta.env.VITE_API_URL}/analytics?range=${view}`,
           {
             method: "GET",
             headers: {
@@ -76,7 +76,7 @@ const Analytics = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-6 mb-4 ml-6">
         {["weekly", "monthly", "yearly"].map((r) => (
           <button
             key={r}
