@@ -53,7 +53,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=False  # Make environment variable names case-insensitive
+        case_sensitive=False,  # Make environment variable names case-insensitive
+        extra="ignore"  # Ignore extra fields from environment variables
     )
 
 settings = Settings()
