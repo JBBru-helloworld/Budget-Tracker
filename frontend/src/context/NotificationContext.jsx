@@ -17,8 +17,9 @@ export function NotificationProvider({ children }) {
     setLoading(true);
     try {
       const token = await currentUser.getIdToken();
-      const response = await apiService.get(
-        `/notifications?include_read=${includeRead}`,
+      const response = await apiService.getWithParams(
+        "/notifications",
+        { include_read: includeRead },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
