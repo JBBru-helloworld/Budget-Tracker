@@ -142,11 +142,23 @@ async def scan_receipt_base64(
         # Process the base64 image data
         receipt_data = await process_receipt_image(base64_image, is_base64=True)
         
+        # Check if there's an error but still return partial data
         if "error" in receipt_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Could not process receipt: {receipt_data['error']}"
-            )
+            print(f"Warning: Receipt processing had issues: {receipt_data['error']}")
+            # Don't raise an error if we got some data back
+            if receipt_data.get("store_name") or receipt_data.get("items"):
+                # Return partial data with warning
+                return ProcessedReceiptResponse(
+                    extracted_text=f"Warning: {receipt_data['error']}\n\nPartial data extracted",
+                    processed_data=receipt_data,
+                    image_path=""
+                )
+            else:
+                # Only raise error if we got no useful data
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=f"AI service temporarily unavailable: {receipt_data['error']}. Please try again in a few moments."
+                )
         
         # Return the processed receipt data
         return ProcessedReceiptResponse(
@@ -155,8 +167,12 @@ async def scan_receipt_base64(
             image_path=""  # No file path for base64 data
         )
         
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
+        print(f"Unexpected error in scan_receipt_base64: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error processing receipt: {str(e)}"
+            detail="An unexpected error occurred while processing the receipt. Please try again."
         )
