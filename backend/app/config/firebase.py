@@ -21,7 +21,12 @@ def initialize_firebase():
             }
             cred = credentials.Certificate(cred_dict)
         
-        return firebase_admin.initialize_app(cred)
+        # Initialize with storage bucket
+        firebase_config = {
+            'storageBucket': settings.FIREBASE_STORAGE_BUCKET
+        }
+        
+        return firebase_admin.initialize_app(cred, firebase_config)
     else:
         return firebase_admin.get_app()
 

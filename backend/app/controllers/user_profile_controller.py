@@ -5,6 +5,7 @@ import os
 from app.models.user_model import UserProfile, UserProfileUpdate
 from app.services.user_service import get_user_profile, update_user_profile, create_user_profile
 from app.services.firebase_service import get_user_id_from_token
+from app.services.storage_service import storage_service
 
 router = APIRouter()
 
@@ -110,30 +111,14 @@ async def upload_avatar(
     file: UploadFile = File(...),
     user_id: str = Depends(get_user_id_from_token)
 ):
-
-    # Upload user avatar image
-    
-    # Validate image format
-    allowed_extensions = ["jpg", "jpeg", "png"]
-    file_ext = file.filename.split(".")[-1].lower()
-    
-    if file_ext not in allowed_extensions:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Avatar must be one of {', '.join(allowed_extensions)}"
-        )
+    """Upload user avatar image to Firebase Storage"""
     
     try:
-        # Create avatars directory if it doesn't exist
-        os.makedirs("static/avatars", exist_ok=True)
+        # Upload to Firebase Storage and get public URL
+        avatar_url = await storage_service.upload_avatar(file, user_id)
         
-        # Save avatar image
-        avatar_path = f"static/avatars/{user_id}.{file_ext}"
-        with open(avatar_path, "wb") as buffer:
-            buffer.write(await file.read())
-        
-        # Update user profile with avatar path
-        updated_profile = await update_user_profile(user_id, {"avatar": avatar_path})
+        # Update user profile with avatar URL
+        updated_profile = await update_user_profile(user_id, {"avatar": avatar_url})
         if not updated_profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -141,6 +126,9 @@ async def upload_avatar(
             )
         
         return updated_profile
+    except HTTPException:
+        # Re-raise HTTP exceptions from storage service
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
