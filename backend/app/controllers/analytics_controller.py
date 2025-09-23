@@ -1,5 +1,5 @@
 # app/controllers/analytics_controller.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional
 from datetime import datetime, timedelta
 import calendar
@@ -12,14 +12,14 @@ router = APIRouter()
 @router.get("/")
 async def get_analytics(
     user_id: str = Depends(get_user_id_from_token),
-    range: str = "weekly"  # weekly, monthly, yearly
+    time_range: str = Query("weekly", alias="range")  # weekly, monthly, yearly
 ):
     """Get analytics data for charts in the format expected by the frontend"""
     try:
         today = datetime.now()
         data = []
         
-        if range == "weekly":
+        if time_range == "weekly":
             # Get last 8 weeks of data
             for i in range(8):
                 week_end = today - timedelta(days=7 * i)
@@ -31,13 +31,13 @@ async def get_analytics(
                     date_filters={"start": week_start, "end": week_end}
                 )
                 
-                total = sum(receipt.get("amount", 0) for receipt in receipts)
+                total = sum(receipt.get("total_amount", 0) for receipt in receipts)
                 data.append({
                     "period": f"Week {8-i}",
                     "amount": total
                 })
                 
-        elif range == "monthly":
+        elif time_range == "monthly":
             # Get last 12 months of data
             for i in range(12):
                 month = today.month - i
@@ -56,13 +56,13 @@ async def get_analytics(
                     date_filters={"start": month_start, "end": month_end}
                 )
                 
-                total = sum(receipt.get("amount", 0) for receipt in receipts)
+                total = sum(receipt.get("total_amount", 0) for receipt in receipts)
                 data.append({
                     "period": month_start.strftime("%b %Y"),
                     "amount": total
                 })
                 
-        elif range == "yearly":
+        elif time_range == "yearly":
             # Get last 5 years of data
             for i in range(5):
                 year = today.year - i
@@ -75,7 +75,7 @@ async def get_analytics(
                     date_filters={"start": year_start, "end": year_end}
                 )
                 
-                total = sum(receipt.get("amount", 0) for receipt in receipts)
+                total = sum(receipt.get("total_amount", 0) for receipt in receipts)
                 data.append({
                     "period": str(year),
                     "amount": total
