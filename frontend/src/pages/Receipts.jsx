@@ -293,13 +293,13 @@ const Receipts = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
-                        to={`/receipt/${receipt.id}`}
+                        to={`/receipts/${receipt.id}`}
                         className="text-blue-600 hover:text-blue-900 mr-4"
                       >
                         View
                       </Link>
                       <Link
-                        to={`/receipt/${receipt.id}/edit`}
+                        to={`/receipts/${receipt.id}/edit`}
                         className="text-indigo-600 hover:text-indigo-900"
                       >
                         Edit

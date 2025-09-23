@@ -170,7 +170,7 @@ const ReceiptDetail = () => {
             <h1 className="text-2xl font-bold text-white">{receipt.store}</h1>
             <div className="flex space-x-2">
               <Link
-                to={`/receipt/${id}/edit`}
+                to={`/receipts/${id}/edit`}
                 className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-colors"
               >
                 <PencilIcon className="h-5 w-5 text-white" />
