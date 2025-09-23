@@ -29,14 +29,16 @@ const Layout = () => {
     if (!avatarPath) return null;
     if (avatarPath.startsWith("http")) return avatarPath; // Already a full URL
     if (avatarPath.startsWith("static/")) {
-      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
+      const baseUrl =
+        import.meta.env.VITE_API_URL?.replace("/api", "") ||
+        "http://localhost:8000";
       const fullUrl = `${baseUrl}/${avatarPath}`;
       console.log("DEBUG: Generated avatar URL:", fullUrl);
       return fullUrl;
     }
     console.log("DEBUG: Using avatarPath as-is:", avatarPath);
     return avatarPath;
-  };  // Fetch user profile data
+  }; // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
       if (currentUser?.uid) {
