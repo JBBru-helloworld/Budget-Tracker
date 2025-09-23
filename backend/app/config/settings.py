@@ -33,6 +33,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8000",
         "https://budget-tracker.jbbru.com",
+        "https://budget.jbbru.com",
         "https://jbbru.com",
         "https://*.vercel.app"  # Allow Vercel preview deployments
     ]
@@ -44,10 +45,17 @@ class Settings(BaseSettings):
         if cors_env:
             try:
                 import json
-                self.CORS_ORIGINS = json.loads(cors_env)
-            except json.JSONDecodeError:
+                # Clean up the JSON string to handle any formatting issues
+                cors_env_clean = cors_env.strip().replace("'", '"')
+                self.CORS_ORIGINS = json.loads(cors_env_clean)
+                print(f"CORS Origins from environment: {self.CORS_ORIGINS}")
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse CORS_ORIGINS JSON: {e}")
                 # Fallback to comma-separated values
-                self.CORS_ORIGINS = [origin.strip() for origin in cors_env.split(",")]
+                self.CORS_ORIGINS = [origin.strip().strip('"\'') for origin in cors_env.split(",")]
+                print(f"CORS Origins from CSV fallback: {self.CORS_ORIGINS}")
+        else:
+            print(f"Using default CORS Origins: {self.CORS_ORIGINS}")
     
     # Update to new Pydantic v2 format
     model_config = SettingsConfigDict(

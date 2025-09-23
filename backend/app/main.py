@@ -2,12 +2,16 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 from app.config.settings import settings
 from app.routes.api import api_router
 from app.config.mongodb import connect_to_mongo, close_mongo_connection
 
 # Create FastAPI app
 app = FastAPI(title="BudgetTracker API", version="1.0.0")
+
+# Debug: Print CORS origins
+print(f"Configured CORS Origins: {settings.CORS_ORIGINS}")
 
 # Configure CORS
 app.add_middleware(
@@ -32,3 +36,12 @@ app.add_event_handler("shutdown", close_mongo_connection)
 @app.get("/")
 async def root():
     return {"status": "ok", "message": "BudgetTracker API is running"}
+
+# CORS test endpoint
+@app.get("/cors-test")
+async def cors_test():
+    return {
+        "message": "CORS is working", 
+        "cors_origins": settings.CORS_ORIGINS,
+        "timestamp": datetime.now().isoformat()
+    }
