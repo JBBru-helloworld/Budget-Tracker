@@ -10,7 +10,7 @@ class CategoryService:
     
     async def initialize(self):
         if self.db is None:
-            self.db = await get_database()
+            self.db = get_database()
             self.categories_collection = self.db.categories
     
     async def create_category(self, category_data):

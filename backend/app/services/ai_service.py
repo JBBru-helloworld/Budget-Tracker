@@ -61,9 +61,24 @@ async def extract_text_from_image(image_path: str) -> str:
     except Exception as e:
         raise Exception(f"Error extracting text from image: {str(e)}")
 
-async def categorize_items(items_text: str) -> List[ReceiptItem]:
+async def categorize_items(items_text: str, user_id: str = None) -> List[ReceiptItem]:
     # Parse and categorize receipt items using Gemini AI.
     try:
+        # Get available categories from the category service
+        from app.services.category_service import get_all_categories
+        
+        available_categories = []
+        if user_id:
+            categories = await get_all_categories(user_id, include_system=True)
+            available_categories = [cat["name"] for cat in categories]
+        
+        # Default categories if no user categories available
+        if not available_categories:
+            available_categories = [
+                "Food & Dining", "Transportation", "Shopping", "Bills & Utilities", 
+                "Healthcare", "Entertainment", "Education", "Miscellaneous"
+            ]
+        
         # Extract items from the text
         item_pattern = r"- (.*?): \$([\d.]+)(?: \(quantity: (\d+)\))?"
         extracted_items = re.findall(item_pattern, items_text)
@@ -73,26 +88,20 @@ async def categorize_items(items_text: str) -> List[ReceiptItem]:
         
         # Prepare items for categorization
         items_for_categorization = "\n".join([f"{item[0]}" for item in extracted_items])
+        categories_list = "\n".join([f"- {cat}" for cat in available_categories])
         
         # Prepare prompt for categorization
         categorize_prompt = f"""
-        Please categorize these items into common budget categories like:
-        - Groceries
-        - Dining Out
-        - Entertainment
-        - Transportation
-        - Shopping
-        - Utilities
-        - Health
-        - Education
-        - Travel
-        - Other
+        Please categorize these items into the following available categories:
+        {categories_list}
         
-        For each item, provide a category.
+        For each item, choose the most appropriate category from the list above.
+        If an item doesn't fit well into any category, use "Miscellaneous".
+        
         Format the output as a list with each item on a new line in this format:
         - Item name: Category
         
-        Here are the items:
+        Here are the items to categorize:
         {items_for_categorization}
         """
         
@@ -100,17 +109,22 @@ async def categorize_items(items_text: str) -> List[ReceiptItem]:
         category_response = text_model.generate_content(categorize_prompt)
         
         # Extract categorizations
-        category_pattern = r"- (.*?): ([\w\s]+)"
+        category_pattern = r"- (.*?): ([\w\s&]+)"
         categorizations = dict(re.findall(category_pattern, category_response.text))
         
         # Create receipt items with categories
         receipt_items = []
         for name, price, quantity in extracted_items:
+            category = categorizations.get(name.strip(), "Miscellaneous")
+            # Ensure the category is in our available categories
+            if category not in available_categories:
+                category = "Miscellaneous"
+                
             receipt_items.append(ReceiptItem(
                 name=name.strip(),
                 price=float(price),
                 quantity=float(quantity) if quantity else 1.0,
-                category=categorizations.get(name.strip(), "Other")
+                category=category
             ))
         
         return receipt_items

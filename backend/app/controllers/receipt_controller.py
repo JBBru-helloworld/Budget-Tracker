@@ -42,7 +42,7 @@ async def upload_receipt(
         items_text = await extract_text_from_image(file_path)
         
         # Process and categorize items
-        receipt_items = await categorize_items(items_text)
+        receipt_items = await categorize_items(items_text, user_id["uid"])
         
         # Create receipt object
         receipt_data = {

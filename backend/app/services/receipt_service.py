@@ -22,10 +22,24 @@ async def save_receipt(receipt_data: dict):
         # Retrieve the inserted receipt
         inserted_receipt = await db.receipts.find_one({"_id": result.inserted_id})
         
-        # Convert ObjectId to string
-        inserted_receipt["_id"] = str(inserted_receipt["_id"])
+        # Convert ObjectId to string and format for frontend
+        formatted_receipt = {
+            "id": str(inserted_receipt["_id"]),
+            "store": inserted_receipt.get("store_name", "Unknown Store"),
+            "amount": inserted_receipt.get("total_amount", 0),
+            "date": inserted_receipt.get("date"),
+            "category": _get_primary_category(inserted_receipt.get("items", [])),
+            "description": f"{len(inserted_receipt.get('items', []))} items",
+            "user_id": inserted_receipt.get("user_id"),
+            "created_at": inserted_receipt.get("created_at"),
+            "updated_at": inserted_receipt.get("updated_at"),
+            "items": inserted_receipt.get("items", []),
+            "store_name": inserted_receipt.get("store_name"),
+            "total_amount": inserted_receipt.get("total_amount", 0),
+            "image_url": inserted_receipt.get("image_url")
+        }
         
-        return inserted_receipt
+        return formatted_receipt
         
     except Exception as e:
         print(f"Error saving receipt: {str(e)}")
@@ -91,9 +105,31 @@ async def get_receipt(receipt_id: str, user_id: str):
     })
     
     if receipt:
-        receipt["id"] = str(receipt["_id"])
-        del receipt["_id"]
-        return receipt
+        # Transform data to match frontend expectations
+        total_amount = receipt.get("total_amount", 0)
+        
+        # Calculate total_amount from items if missing or invalid
+        if not total_amount or total_amount == 0:
+            items = receipt.get("items", [])
+            total_amount = sum(item.get("price", 0) * item.get("quantity", 1) for item in items)
+        
+        formatted_receipt = {
+            "id": str(receipt["_id"]),
+            "store": receipt.get("store_name", "Unknown Store"),
+            "amount": total_amount,
+            "date": receipt.get("date"),
+            "category": _get_primary_category(receipt.get("items", [])),
+            "description": f"{len(receipt.get('items', []))} items",
+            "user_id": receipt.get("user_id"),
+            "created_at": receipt.get("created_at"),
+            "updated_at": receipt.get("updated_at"),
+            "items": receipt.get("items", []),
+            "store_name": receipt.get("store_name"),
+            "total_amount": total_amount,
+            "image_url": receipt.get("image_url"),
+            "shared_expenses": receipt.get("shared_expenses", [])
+        }
+        return formatted_receipt
     
     return None
 
@@ -129,10 +165,17 @@ async def get_user_receipts(user_id: str, skip: int = 0, limit: int = 20, catego
         del receipt["_id"]
         
         # Transform data to match frontend expectations
+        total_amount = receipt.get("total_amount", 0)
+        
+        # Calculate total_amount from items if missing or invalid
+        if not total_amount or total_amount == 0:
+            items = receipt.get("items", [])
+            total_amount = sum(item.get("price", 0) * item.get("quantity", 1) for item in items)
+        
         formatted_receipt = {
             "id": receipt["id"],
             "store": receipt.get("store_name", "Unknown Store"),
-            "amount": receipt.get("total_amount", 0),
+            "amount": total_amount,
             "date": receipt.get("date"),
             "category": _get_primary_category(receipt.get("items", [])),
             "description": f"{len(receipt.get('items', []))} items",
