@@ -18,7 +18,6 @@ class Settings(BaseSettings):
     FIREBASE_CLIENT_EMAIL: str = ""
     FIREBASE_CLIENT_ID: str = ""
     FIREBASE_APP_ID: str = ""
-    FIREBASE_STORAGE_BUCKET: str = ""
     FIREBASE_AUTH_DOMAIN: str = ""
     FIREBASE_MESSAGING_SENDER_ID: str = ""
     FIREBASE_SERVICE_ACCOUNT_PATH: str = "firebase-service-account.json"

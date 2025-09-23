@@ -2,10 +2,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from typing import Optional
 import os
+import base64
 from app.models.user_model import UserProfile, UserProfileUpdate
 from app.services.user_service import get_user_profile, update_user_profile, create_user_profile
 from app.services.firebase_service import get_user_id_from_token
-from app.services.storage_service import storage_service
 
 router = APIRouter()
 
@@ -111,14 +111,46 @@ async def upload_avatar(
     file: UploadFile = File(...),
     user_id: str = Depends(get_user_id_from_token)
 ):
-    """Upload user avatar image to Firebase Storage"""
+    """Upload user avatar image and store as base64 in MongoDB"""
+    
+    # Validate image format
+    allowed_extensions = ["jpg", "jpeg", "png", "gif", "webp"]
+    file_ext = file.filename.split(".")[-1].lower() if file.filename else ""
+    
+    if file_ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Avatar must be one of {', '.join(allowed_extensions)}"
+        )
+    
+    # Validate file size (limit to 5MB)
+    MAX_SIZE = 5 * 1024 * 1024  # 5MB
+    file_content = await file.read()
+    if len(file_content) > MAX_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Avatar file size must be less than 5MB"
+        )
     
     try:
-        # Upload to Firebase Storage and get public URL
-        avatar_url = await storage_service.upload_avatar(file, user_id)
+        # Convert image to base64
+        base64_encoded = base64.b64encode(file_content).decode('utf-8')
         
-        # Update user profile with avatar URL
-        updated_profile = await update_user_profile(user_id, {"avatar": avatar_url})
+        # Get MIME type from file extension
+        mime_types = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp'
+        }
+        mime_type = mime_types.get(file_ext, 'image/jpeg')
+        
+        # Create data URL for storage
+        avatar_data_url = f"data:{mime_type};base64,{base64_encoded}"
+        
+        # Update user profile with avatar data
+        updated_profile = await update_user_profile(user_id, {"avatar": avatar_data_url})
         if not updated_profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -126,11 +158,36 @@ async def upload_avatar(
             )
         
         return updated_profile
-    except HTTPException:
-        # Re-raise HTTP exceptions from storage service
-        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error uploading avatar: {str(e)}"
+        )
+
+@router.get("/avatar")
+async def get_avatar(user_id: str = Depends(get_user_id_from_token)):
+    """Get user avatar as base64 data URL"""
+    
+    try:
+        profile = await get_user_profile(user_id)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User profile not found"
+            )
+        
+        if not profile.avatar:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User has no avatar"
+            )
+        
+        return {"avatar": profile.avatar}
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching avatar: {str(e)}"
         )

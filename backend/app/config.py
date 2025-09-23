@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     # Additional Firebase fields
     FIREBASE_CLIENT_ID: Optional[str] = None
     FIREBASE_APP_ID: Optional[str] = None
-    FIREBASE_STORAGE_BUCKET: Optional[str] = None
     FIREBASE_AUTH_DOMAIN: Optional[str] = None
     FIREBASE_MESSAGING_SENDER_ID: Optional[str] = None
     
