@@ -41,21 +41,35 @@ class Settings(BaseSettings):
     # Allow override from environment variable
     def __init__(self, **data):
         super().__init__(**data)
+        
+        # Always ensure the frontend domain is included
+        required_origins = [
+            "https://budget-tracker.jbbru.com",
+            "https://budget.jbbru.com", 
+            "http://localhost:3000"
+        ]
+        
         cors_env = os.getenv("CORS_ORIGINS")
         if cors_env:
             try:
+                # First try JSON parsing
                 import json
-                # Clean up the JSON string to handle any formatting issues
                 cors_env_clean = cors_env.strip().replace("'", '"')
-                self.CORS_ORIGINS = json.loads(cors_env_clean)
-                print(f"CORS Origins from environment: {self.CORS_ORIGINS}")
-            except json.JSONDecodeError as e:
-                print(f"Failed to parse CORS_ORIGINS JSON: {e}")
+                env_origins = json.loads(cors_env_clean)
+                print(f"CORS Origins from JSON: {env_origins}")
+            except json.JSONDecodeError:
                 # Fallback to comma-separated values
-                self.CORS_ORIGINS = [origin.strip().strip('"\'') for origin in cors_env.split(",")]
-                print(f"CORS Origins from CSV fallback: {self.CORS_ORIGINS}")
+                env_origins = [origin.strip().strip('"\'') for origin in cors_env.split(",")]
+                print(f"CORS Origins from CSV: {env_origins}")
+            
+            # Combine environment origins with required origins
+            all_origins = list(set(env_origins + required_origins + self.CORS_ORIGINS))
+            self.CORS_ORIGINS = all_origins
+            print(f"Final CORS Origins: {self.CORS_ORIGINS}")
         else:
-            print(f"Using default CORS Origins: {self.CORS_ORIGINS}")
+            # No environment variable, add required origins to defaults
+            self.CORS_ORIGINS = list(set(required_origins + self.CORS_ORIGINS))
+            print(f"Using default + required CORS Origins: {self.CORS_ORIGINS}")
     
     # Update to new Pydantic v2 format
     model_config = SettingsConfigDict(
