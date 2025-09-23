@@ -10,7 +10,6 @@ from ..models.notifications_model import NotificationResponse
 from ..services.firebase_service import get_user_id_from_token
 
 router = APIRouter(
-    prefix="/notifications",
     tags=["notifications"]
 )
 
