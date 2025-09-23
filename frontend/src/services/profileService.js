@@ -1,7 +1,7 @@
 import axios from "axios";
 import { auth } from "../firebase";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 // Helper to get auth token
 const getAuthToken = async () => {
@@ -15,7 +15,7 @@ const getAuthToken = async () => {
 export const getUserProfile = async (userId) => {
   try {
     const token = await getAuthToken();
-    const response = await axios.get(`${API_URL}/api/profile/`, {
+    const response = await axios.get(`${API_URL}/profile/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -39,7 +39,7 @@ export const getUserProfile = async (userId) => {
 
 export const createUserProfile = async (profileData) => {
   const token = await getAuthToken();
-  const response = await axios.post(`${API_URL}/api/profile/`, profileData, {
+  const response = await axios.post(`${API_URL}/profile/`, profileData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -50,12 +50,16 @@ export const createUserProfile = async (profileData) => {
 
 export const updateUserProfile = async (userId, profileData) => {
   const token = await getAuthToken();
-  const response = await axios.put(`${API_URL}/api/profile/`, profileData, {
+  console.log("Updating profile with data:", profileData);
+
+  const response = await axios.put(`${API_URL}/profile/`, profileData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
+
+  console.log("Profile update response:", response.data);
   return response.data;
 };
 
@@ -65,12 +69,20 @@ export const uploadAvatar = async (userId, file) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await axios.post(`${API_URL}/api/profile/avatar`, formData, {
+  console.log("Uploading avatar for user:", userId);
+  console.log("File details:", {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  });
+
+  const response = await axios.post(`${API_URL}/profile/avatar`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
     },
   });
 
-  return response.data.avatar_url;
+  console.log("Avatar upload response:", response.data);
+  return response.data.avatar; // Backend returns 'avatar' not 'avatar_url'
 };

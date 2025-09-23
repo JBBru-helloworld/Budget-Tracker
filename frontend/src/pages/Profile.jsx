@@ -18,13 +18,28 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState({
     display_name: "",
     email: "",
+    first_name: "",
+    last_name: "",
     monthly_budget: "",
-    avatar_url: null,
+    avatar: null,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+
+  // Helper function to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith("http")) return avatarPath; // Already a full URL
+    if (avatarPath.startsWith("static/")) {
+      return `${
+        import.meta.env.VITE_API_URL?.replace("/api", "") ||
+        "http://localhost:8000"
+      }/${avatarPath}`;
+    }
+    return avatarPath;
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -35,8 +50,10 @@ const ProfilePage = () => {
             display_name:
               profileData.display_name || currentUser.displayName || "",
             email: profileData.email || currentUser.email || "",
+            first_name: profileData.first_name || "",
+            last_name: profileData.last_name || "",
             monthly_budget: profileData.monthly_budget?.toString() || "",
-            avatar_url: profileData.avatar_url || currentUser.photoURL,
+            avatar: profileData.avatar || currentUser.photoURL,
           });
         } catch (error) {
           console.error("Error fetching profile:", error);
@@ -45,8 +62,10 @@ const ProfilePage = () => {
           setProfile({
             display_name: currentUser.displayName || "",
             email: currentUser.email || "",
+            first_name: "",
+            last_name: "",
             monthly_budget: "",
-            avatar_url: currentUser.photoURL,
+            avatar: currentUser.photoURL,
           });
         } finally {
           setLoading(false);
@@ -95,21 +114,41 @@ const ProfilePage = () => {
       // Update profile
       const updateData = {
         display_name: profile.display_name,
-        email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
         monthly_budget: profile.monthly_budget
           ? parseFloat(profile.monthly_budget)
           : null,
       };
 
-      await updateUserProfile(currentUser.uid, updateData);
+      console.log("Sending profile update:", updateData);
+      const updatedProfile = await updateUserProfile(
+        currentUser.uid,
+        updateData
+      );
+      console.log("Received updated profile:", updatedProfile);
+
+      // Update local state with the response
+      setProfile((prevProfile) => ({
+        ...prevProfile,
+        display_name: updatedProfile.display_name || prevProfile.display_name,
+        first_name: updatedProfile.first_name || prevProfile.first_name,
+        last_name: updatedProfile.last_name || prevProfile.last_name,
+        monthly_budget:
+          updatedProfile.monthly_budget?.toString() ||
+          prevProfile.monthly_budget,
+        avatar: updatedProfile.avatar || prevProfile.avatar,
+      }));
 
       // Upload avatar if selected
       if (file) {
-        const avatarUrl = await uploadAvatar(currentUser.uid, file);
-        setProfile({
-          ...profile,
-          avatar_url: avatarUrl,
-        });
+        const avatarPath = await uploadAvatar(currentUser.uid, file);
+        setProfile((prevProfile) => ({
+          ...prevProfile,
+          avatar: avatarPath,
+        }));
+        setFile(null);
+        setFilePreview(null);
       }
 
       toast.success("Profile updated successfully");
@@ -138,7 +177,11 @@ const ProfilePage = () => {
           <div className="flex flex-col items-center mb-6">
             <div className="relative group">
               <img
-                src={filePreview || profile.avatar_url || "/default-avatar.png"}
+                src={
+                  filePreview ||
+                  getAvatarUrl(profile.avatar) ||
+                  "/default-avatar.png"
+                }
                 alt="Profile"
                 className="w-32 h-32 rounded-full object-cover border-4 border-purple-100"
               />
@@ -157,6 +200,40 @@ const ProfilePage = () => {
           </div>
 
           <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="first_name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                First Name
+              </label>
+              <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                value={profile.first_name}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="last_name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Last Name
+              </label>
+              <input
+                type="text"
+                id="last_name"
+                name="last_name"
+                value={profile.last_name}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+
             <div>
               <label
                 htmlFor="display_name"
@@ -189,7 +266,8 @@ const ProfilePage = () => {
                 value={profile.email}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
+                disabled
+                title="Email cannot be changed"
               />
             </div>
 

@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create a base axios instance with common configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -23,9 +23,20 @@ apiClient.interceptors.request.use(
 // API service methods
 const apiService = {
   // Generic GET request
-  get: async (url, params = {}) => {
+  get: async (url, config = {}) => {
     try {
-      const response = await apiClient.get(url, { params });
+      const response = await apiClient.get(url, config);
+      return response;
+    } catch (error) {
+      console.error(`GET error for ${url}:`, error);
+      throw error;
+    }
+  },
+
+  // GET request with query parameters
+  getWithParams: async (url, params = {}, config = {}) => {
+    try {
+      const response = await apiClient.get(url, { ...config, params });
       return response;
     } catch (error) {
       console.error(`GET error for ${url}:`, error);
@@ -34,9 +45,9 @@ const apiService = {
   },
 
   // Generic POST request
-  post: async (url, data = {}) => {
+  post: async (url, data = {}, config = {}) => {
     try {
-      const response = await apiClient.post(url, data);
+      const response = await apiClient.post(url, data, config);
       return response;
     } catch (error) {
       console.error(`POST error for ${url}:`, error);
@@ -45,9 +56,9 @@ const apiService = {
   },
 
   // Generic PUT request
-  put: async (url, data = {}) => {
+  put: async (url, data = {}, config = {}) => {
     try {
-      const response = await apiClient.put(url, data);
+      const response = await apiClient.put(url, data, config);
       return response;
     } catch (error) {
       console.error(`PUT error for ${url}:`, error);
@@ -56,9 +67,9 @@ const apiService = {
   },
 
   // Generic DELETE request
-  delete: async (url) => {
+  delete: async (url, config = {}) => {
     try {
-      const response = await apiClient.delete(url);
+      const response = await apiClient.delete(url, config);
       return response;
     } catch (error) {
       console.error(`DELETE error for ${url}:`, error);
