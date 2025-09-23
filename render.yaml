@@ -36,7 +36,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://budget.jbbru.com","https://jbbru.com"]'
+        value: '["https://budget-tracker.jbbru.com","https://budget.jbbru.com","https://jbbru.com","http://localhost:3000"]'
 
 databases:
   - name: budget-tracker-db
